@@ -21,14 +21,22 @@ class Orders {
   Map _service;
   Map _address;
   Map _worker;
+  String _feedback_count;
   List<BookingTrack> _booking_progress;
 
   Orders(this._id, this._booking_ref, this._user_id, this._address_id,
       this._service_id, this._actual_price, this._discount_value,
       this._discount_type, this._payment_type,this._subscription_id,this._subscription_discount, this._discounted_price,
       this._user_lat, this._user_lon, this._status, this._created_at,
-      this._updated_at, this._service, this._address, this._worker,
+      this._updated_at, this._service, this._address, this._worker, this._feedback_count,
       this._booking_progress);
+
+
+  String get feedback_count => _feedback_count;
+
+  set feedback_count(String value) {
+    _feedback_count = value;
+  }
 
   String get subscription_id => _subscription_id;
 

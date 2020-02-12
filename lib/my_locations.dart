@@ -4,11 +4,13 @@ import 'package:eleve11/modal/locations.dart';
 import 'package:eleve11/modal/notification.dart';
 import 'package:eleve11/services/api_services.dart';
 import 'package:eleve11/utils/translations.dart';
+import 'package:eleve11/widgets/map_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MyLocations extends StatefulWidget {
   _MyLocationsState createState() => _MyLocationsState();
@@ -194,7 +196,7 @@ class _MyLocationsState extends State<MyLocations> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -204,7 +206,7 @@ class _MyLocationsState extends State<MyLocations> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -213,213 +215,291 @@ class _MyLocationsState extends State<MyLocations> {
     _scaffoldKey.currentState.showSnackBar(snackBar);
   }
 
+  _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
   bodyCard() {
-    return Expanded(
-      child: ListView.builder(
-        scrollDirection: Axis.vertical,
-        shrinkWrap: true,
-        itemCount: locationsList.length,
-        itemBuilder: (BuildContext context, int index) {
-          return CardData(locationsList[index], index + 1);
-        },
-      ),
-    );
+    return locationsList.length > 0
+        ? Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
+              itemCount: locationsList.length,
+              itemBuilder: (BuildContext context, int index) {
+                return CardData(locationsList[index], index + 1);
+              },
+            ),
+          )
+        : Expanded(
+          child: Center(
+              child: Text(
+                'no_location',
+                style: TextStyle(
+                    fontFamily: 'Montserrat', color: Colors.black, fontSize: 14),
+              ),
+            ),
+        );
   }
 
   CardData(Locations locations, int i) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
-      child: Card(
-        elevation: 2,
-        child: Stack(
-          children: <Widget>[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SvgPicture.asset("assets/imgs/locations.svg",
-                          allowDrawingOutsideViewBox: true,
-                          height: 30,
-                          width: 30,
-                          color: Colors.orange),
-                    ),
-                    Expanded(
-                      child: Padding(
+      child: GestureDetector(
+        onTap: () {
+          openMapsSheet(context, locations);
+        },
+        child: Card(
+          elevation: 2,
+          child: Stack(
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            new Text( locations.name!=null?locations.name:'No name',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Montserrat',
-                                    color: Colors.black,
-                                    fontSize: 14)),
-                            SizedBox(
-                              height: 5.0,
-                            ),
-                            Text(locations.address,
-                                softWrap: true,
-                                style: TextStyle(
-                                    fontFamily: 'Montserrat',
-                                    color: Colors.black,
-                                    fontSize: 12)),
-                          ],
+                        child: SvgPicture.asset("assets/imgs/locations.svg",
+                            allowDrawingOutsideViewBox: true,
+                            height: 30,
+                            width: 30,
+                            color: Colors.orange),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              new Text(
+                                  locations.name != null
+                                      ? locations.name
+                                      : 'No name',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Montserrat',
+                                      color: Colors.black,
+                                      fontSize: 14)),
+                              SizedBox(
+                                height: 5.0,
+                              ),
+                              Text(locations.address,
+                                  softWrap: true,
+                                  style: TextStyle(
+                                      fontFamily: 'Montserrat',
+                                      color: Colors.black,
+                                      fontSize: 12)),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 5, 10),
-                  child: Text(locations.house + ", near " + locations.landmark,
-                      softWrap: true,
-                      style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          color: Colors.grey,
-                          fontSize: 12)),
-                )
-              ],
-            ),
-            Positioned(
-              right: 0,
-              child: IconButton(
-                onPressed: () => {
-                  showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                            title: Text("Edit Location"),
-                            content: SingleChildScrollView(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: new TextField(
-                                      autofocus: true,
-                                      controller: _loccontroller,
-                                      decoration: new InputDecoration(
-                                          labelText: 'Location',
-                                          hintText: locations.name,
-                                          contentPadding: EdgeInsets.symmetric(
-                                              vertical: 5, horizontal: 8),
-                                          border: new OutlineInputBorder(
-                                            borderRadius:
-                                                new BorderRadius.circular(5.0),
-                                            borderSide: new BorderSide(),
-                                          )),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: new TextField(
-                                      autofocus: true,
-                                      controller: _housecontroller,
-                                      decoration: new InputDecoration(
-                                          contentPadding: EdgeInsets.symmetric(
-                                              vertical: 5, horizontal: 8),
-                                          labelText: 'House',
-                                          hintText: locations.house,
-                                          border: new OutlineInputBorder(
-                                            borderRadius:
-                                                new BorderRadius.circular(5.0),
-                                            borderSide: new BorderSide(),
-                                          )),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: new TextField(
-                                      autofocus: true,
-                                      controller: _lndMrkcontroller,
-                                      decoration: new InputDecoration(
-                                          contentPadding: EdgeInsets.symmetric(
-                                              vertical: 5, horizontal: 8),
-                                          labelText: 'Landmark',
-                                          hintText: locations.landmark,
-                                          border: new OutlineInputBorder(
-                                            borderRadius:
-                                                new BorderRadius.circular(5.0),
-                                            borderSide: new BorderSide(),
-                                          )),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: new TextField(
-                                      maxLines: 5,
-                                      autofocus: true,
-                                      controller: _addresscontroller,
-                                      decoration: new InputDecoration(
-                                        contentPadding: EdgeInsets.symmetric(
-                                            vertical: 5, horizontal: 8),
-                                        labelText: 'Address',
-                                        alignLabelWithHint: true,
-                                        hintText: locations.address,
-                                        border: new OutlineInputBorder(
-                                          borderRadius:
-                                              new BorderRadius.circular(5.0),
-                                          borderSide: new BorderSide(),
-                                        ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 5, 10),
+                    child: Text(
+                        locations.house + ", near " + locations.landmark,
+                        softWrap: true,
+                        style: TextStyle(
+                            fontFamily: 'Montserrat',
+                            color: Colors.grey,
+                            fontSize: 12)),
+                  )
+                ],
+              ),
+              Positioned(
+                right: 0,
+                child: IconButton(
+                  onPressed: () => {
+                    showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                              title: Text("Edit Location"),
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: new TextField(
+                                        autofocus: true,
+                                        controller: _loccontroller,
+                                        decoration: new InputDecoration(
+                                            labelText: 'Location',
+                                            hintText: locations.name,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                    vertical: 5, horizontal: 8),
+                                            border: new OutlineInputBorder(
+                                              borderRadius:
+                                                  new BorderRadius.circular(
+                                                      5.0),
+                                              borderSide: new BorderSide(),
+                                            )),
                                       ),
                                     ),
-                                  )
-                                ],
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: new TextField(
+                                        autofocus: true,
+                                        controller: _housecontroller,
+                                        decoration: new InputDecoration(
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                    vertical: 5, horizontal: 8),
+                                            labelText: Translations.of(context).text('house'),
+                                            hintText: locations.house,
+                                            border: new OutlineInputBorder(
+                                              borderRadius:
+                                                  new BorderRadius.circular(
+                                                      5.0),
+                                              borderSide: new BorderSide(),
+                                            )),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: new TextField(
+                                        autofocus: true,
+                                        controller: _lndMrkcontroller,
+                                        decoration: new InputDecoration(
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                    vertical: 5, horizontal: 8),
+                                            labelText: Translations.of(context).text('landmark'),
+                                            hintText: locations.landmark,
+                                            border: new OutlineInputBorder(
+                                              borderRadius:
+                                                  new BorderRadius.circular(
+                                                      5.0),
+                                              borderSide: new BorderSide(),
+                                            )),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: new TextField(
+                                        maxLines: 5,
+                                        autofocus: true,
+                                        controller: _addresscontroller,
+                                        decoration: new InputDecoration(
+                                          contentPadding: EdgeInsets.symmetric(
+                                              vertical: 5, horizontal: 8),
+                                          labelText: Translations.of(context).text('address'),
+                                          alignLabelWithHint: true,
+                                          hintText: locations.address,
+                                          border: new OutlineInputBorder(
+                                            borderRadius:
+                                                new BorderRadius.circular(5.0),
+                                            borderSide: new BorderSide(),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
                               ),
-                            ),
-                            actions: <Widget>[
-                              FlatButton(
-                                child: Text("Cancel"),
-                                onPressed: () => Navigator.pop(context, false),
-                              ),
-                              FlatButton(
-                                child: Text("Edit"),
-                                onPressed: () => {
-                                  if (_loccontroller.text == '' &&
-                                      _housecontroller.text == '' &&
-                                      _lndMrkcontroller.text == '' &&
-                                      _addresscontroller.text == '')
-                                    {
-                                      presentToast(
-                                          'Nothing to update', context, 2)
-                                    }
-                                  else
-                                    {
+                              actions: <Widget>[
+                                FlatButton(
+                                  child: Text(Translations.of(context).text('cancel')),
+                                  onPressed: () =>
                                       Navigator.pop(context, false),
-                                      updateLocation(
-                                          locations.id,
-                                          _loccontroller.text != ''
-                                              ? _loccontroller.text
-                                              : locations.name,
-                                          _housecontroller.text != ''
-                                              ? _housecontroller.text
-                                              : locations.house,
-                                          _lndMrkcontroller.text != ''
-                                              ? _lndMrkcontroller.text
-                                              : locations.landmark,
-                                          _addresscontroller.text != ''
-                                              ? _addresscontroller.text
-                                              : locations.address)
-                                    }
-                                },
-                              ),
-                            ],
-                          ))
-                },
-                icon: Icon(
-                  Icons.edit,
-                  size: 20,
-                  color: Colors.orange,
+                                ),
+                                FlatButton(
+                                  child: Text(Translations.of(context).text('edit')),
+                                  onPressed: () => {
+                                    if (_loccontroller.text == '' &&
+                                        _housecontroller.text == '' &&
+                                        _lndMrkcontroller.text == '' &&
+                                        _addresscontroller.text == '')
+                                      {
+                                        presentToast(
+                                    Translations.of(context).text('nothing_to_update'), context, 2)
+                                      }
+                                    else
+                                      {
+                                        Navigator.pop(context, false),
+                                        updateLocation(
+                                            locations.id,
+                                            _loccontroller.text != ''
+                                                ? _loccontroller.text
+                                                : locations.name,
+                                            _housecontroller.text != ''
+                                                ? _housecontroller.text
+                                                : locations.house,
+                                            _lndMrkcontroller.text != ''
+                                                ? _lndMrkcontroller.text
+                                                : locations.landmark,
+                                            _addresscontroller.text != ''
+                                                ? _addresscontroller.text
+                                                : locations.address)
+                                      }
+                                  },
+                                ),
+                              ],
+                            ))
+                  },
+                  icon: Icon(
+                    Icons.edit,
+                    size: 20,
+                    color: Colors.orange,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  openMapsSheet(context, Locations locations) async {
+    try {
+      final title = locations.name;
+      final description = locations.house + ", " + locations.landmark;
+      final coords =
+          Coords(double.parse(locations.lat), double.parse(locations.lon));
+      final availableMaps = await MapLauncher.installedMaps;
+
+      print(availableMaps);
+
+      showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return SafeArea(
+            child: SingleChildScrollView(
+              child: Container(
+                child: Wrap(
+                  children: <Widget>[
+                    for (var map in availableMaps)
+                      ListTile(
+                        onTap: () => map.showMarker(
+                          coords: coords,
+                          title: title,
+                          description: description,
+                        ),
+                        title: Text(map.mapName),
+                        leading: Image(
+                          image: map.icon,
+                          height: 30.0,
+                          width: 30.0,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      print(e);
+    }
   }
 }

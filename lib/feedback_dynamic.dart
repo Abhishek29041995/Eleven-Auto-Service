@@ -11,11 +11,22 @@ import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FeedbackDynamic extends StatefulWidget {
-  _FeedbackDynamicState createState() => _FeedbackDynamicState();
+  String orderId;
+
+  FeedbackDynamic(String orderId) {
+    this.orderId = orderId;
+  }
+
+  _FeedbackDynamicState createState() => _FeedbackDynamicState(this.orderId);
 }
 
 class _FeedbackDynamicState extends State<FeedbackDynamic> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  String orderId;
+
+  _FeedbackDynamicState(String orderId) {
+    this.orderId = orderId;
+  }
 
   List<Step> get listSteps => createSteps();
   List<Question> questionList = new List();
@@ -133,7 +144,7 @@ class _FeedbackDynamicState extends State<FeedbackDynamic> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -207,7 +218,7 @@ class _FeedbackDynamicState extends State<FeedbackDynamic> {
                   if (qusAns.length == questionList.length) {
                     addFeedback();
                   } else {
-                    _displaySnackBar('Give all feedback');
+                    _displaySnackBar(Translations.of(context).text('give_all_feed'));
                   }
                 },
                 textColor: Colors.white,
@@ -249,7 +260,7 @@ class _FeedbackDynamicState extends State<FeedbackDynamic> {
           content: Column(
             children: <Widget>[
               Text(
-                  "Q." +
+                  Translations.of(context).text('qus') +
                       (questionList.indexOf(question) + 1).toString() +
                       " " +
                       question.question,
@@ -288,9 +299,9 @@ class _FeedbackDynamicState extends State<FeedbackDynamic> {
                               }
                             }
 
-                            if(current_step<questionList.length-1){
+                            if (current_step < questionList.length - 1) {
                               setState(() {
-                                current_step = current_step+1;
+                                current_step = current_step + 1;
                               });
                             }
                           });
@@ -336,8 +347,10 @@ class _FeedbackDynamicState extends State<FeedbackDynamic> {
       _isLoading = true;
     });
     var jsonvar = jsonEncode(qusAns.map((e) => e.toJsonAttr()).toList());
-    var request = new MultipartRequest("POST", Uri.parse(api_url + "user/feedback/submit"));
+    var request = new MultipartRequest(
+        "POST", Uri.parse(api_url + "user/feedback/submit"));
     request.fields['answers'] = jsonvar;
+    request.fields['booking_id'] = orderId;
     request.headers['Authorization'] = "Bearer $acccessToken";
     commonMethod(request).then((onResponse) {
       onResponse.stream.transform(utf8.decoder).listen((value) {

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart';
+import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OverViewOrder extends StatefulWidget {
@@ -77,6 +78,9 @@ class _OverViewOrderState extends State<OverViewOrder> {
   String discountType = "0";
   String discountedPrice = "0";
 
+  bool showImage = true;
+  bool focuschanged = false;
+
   _OverViewOrderState(
       List<ServiceList> serviceList,
       String type,
@@ -107,6 +111,15 @@ class _OverViewOrderState extends State<OverViewOrder> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    KeyboardVisibilityNotification().addNewListener(
+      onChange: (bool visible) {
+        setState(() {
+          showImage = !showImage;
+          print(showImage);
+        });
+      },
+    );
+
     checkIsLogin();
   }
 
@@ -154,55 +167,61 @@ class _OverViewOrderState extends State<OverViewOrder> {
       ),
     );
     list.add(appBar);
-    var servicelist = Padding(
-      padding: EdgeInsets.only(top: 80),
-      child: ListView.separated(
-          separatorBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.only(left: 30, right: 10),
-                child: Divider(
-                  color: Colors.black12,
-                ),
-              ),
-          itemCount: serviceList.length,
-          itemBuilder: (BuildContext ctxt, int index) {
-            return Padding(
-              padding: const EdgeInsets.only(left: 30, right: 30, top: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      FadeInImage.assetNetwork(
-                        placeholder: 'assets/imgs/placeholder.png',
-                        image: serviceList[index].image,
-                        height: 20,
+    var servicelist = showImage
+        ? Padding(
+            padding: EdgeInsets.only(top: 80),
+            child: ListView.separated(
+                separatorBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.only(left: 30, right: 10),
+                      child: Divider(
+                        color: Colors.black12,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    ),
+                itemCount: serviceList.length,
+                itemBuilder: (BuildContext ctxt, int index) {
+                  return Padding(
+                    padding:
+                        const EdgeInsets.only(left: 30, right: 30, top: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Row(
                           children: <Widget>[
-                            Text(
-                              serviceList[index].name,
-                              style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold),
+                            FadeInImage.assetNetwork(
+                              placeholder: 'assets/imgs/placeholder.png',
+                              image: serviceList[index].image,
+                              height: 20,
                             ),
-                            Text(
-                              type == 'SEDAN'
-                                  ? serviceList[index].sedan_price
-                                  : serviceList[index].suv_price,
-                              style: TextStyle(fontSize: 13),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    serviceList[index].name,
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    type == 'SEDAN'
+                                        ? serviceList[index].sedan_price
+                                        : serviceList[index].suv_price,
+                                    style: TextStyle(fontSize: 13),
+                                  )
+                                ],
+                              ),
                             )
                           ],
                         ),
-                      )
-                    ],
-                  ),
-                ],
-              ),
-            );
-          }),
-    );
+                      ],
+                    ),
+                  );
+                }),
+          )
+        : SizedBox(
+            height: 0,
+          );
     list.add(servicelist);
     var footer = Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -278,7 +297,9 @@ class _OverViewOrderState extends State<OverViewOrder> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Text("Original Price",
+                              Text(
+                                  Translations.of(context)
+                                      .text('original_price'),
                                   style: TextStyle(
                                       fontFamily: 'Montserrat', fontSize: 12)),
                               Text(originalPrice,
@@ -313,7 +334,7 @@ class _OverViewOrderState extends State<OverViewOrder> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Text("Amount to pay",
+                              Text(Translations.of(context).text('amounttopay'),
                                   style: TextStyle(
                                       fontFamily: 'Montserrat', fontSize: 12)),
                               Text(
@@ -478,7 +499,7 @@ class _OverViewOrderState extends State<OverViewOrder> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -494,7 +515,7 @@ class _OverViewOrderState extends State<OverViewOrder> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -520,26 +541,26 @@ class _OverViewOrderState extends State<OverViewOrder> {
                     width: 40,
                   ),
                   Text(
-                    "THANK YOU!",
+                    Translations.of(context).text('thank_u'),
                     style: TextStyle(
                         fontSize: 16,
                         fontFamily: 'Montserrat',
                         fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    "FOR ORDERING ELVEVE 11,\nENJOY OUR SERVICES",
+                    Translations.of(context).text('for_ordering'),
                     style: TextStyle(fontSize: 13, fontFamily: 'Montserrat'),
                   ),
                   Text(
                     data['booking_ref'],
                     style: TextStyle(
-                        fontSize: 38,
+                        fontSize: 20,
                         fontFamily: 'Montserrat',
                         fontWeight: FontWeight.bold,
                         color: Color(0xff68CCEA)),
                   ),
                   Text(
-                    "is your Reference No.",
+                    Translations.of(context).text('is_reference_no'),
                     style: TextStyle(fontSize: 13, fontFamily: 'Montserrat'),
                   ),
                   Padding(
@@ -549,13 +570,20 @@ class _OverViewOrderState extends State<OverViewOrder> {
                         constraints: const BoxConstraints(
                             minWidth: double.infinity, minHeight: 35.0),
                         child: RaisedButton(
-                            child: new Text("OK"),
+                            child:
+                                new Text(Translations.of(context).text('ok')),
                             onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  new MaterialPageRoute(
-                                      builder: (context) =>
-                                          new ShowDirections(data)));
+//                              Navigator.push(
+//                                  context,
+//                                  new MaterialPageRoute(
+//                                      builder: (context) =>
+//                                          new ShowDirections(data)));
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                new MaterialPageRoute(
+                                    builder: (context) => new LandingPage()),
+                                    (Route<dynamic> route) => false,
+                              );
                             },
                             textColor: Colors.white,
                             color: Color(0xff170e50),
@@ -705,9 +733,8 @@ class _OverViewOrderState extends State<OverViewOrder> {
           print(onError);
           _displaySnackBar(Translations.of(context).text('server_error'));
         }
-      }).onError((err) => {
-            _displaySnackBar(Translations.of(context).text('server_error'))
-          });
+      }).onError((err) =>
+          {_displaySnackBar(Translations.of(context).text('server_error'))});
     });
   }
 }

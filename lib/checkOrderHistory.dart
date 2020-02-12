@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:eleve11/checkOrderHistoryDetails.dart';
+import 'package:eleve11/feedback_dynamic.dart';
 import 'package:eleve11/main.dart';
 import 'package:eleve11/modal/booking_track.dart';
 import 'package:eleve11/modal/orders.dart';
@@ -13,8 +14,14 @@ import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CheckOrderHistory extends StatefulWidget {
+  String from;
+
+  CheckOrderHistory(String from) {
+    this.from = from;
+  }
+
   @override
-  _CheckOrderHistory createState() => _CheckOrderHistory();
+  _CheckOrderHistory createState() => _CheckOrderHistory(this.from);
 }
 
 class _CheckOrderHistory extends State<CheckOrderHistory> {
@@ -22,6 +29,11 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
   bool _isLoading = false;
   List<Orders> orderList = new List();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  String from;
+
+  _CheckOrderHistory(String from) {
+    this.from = from;
+  }
 
   @override
   void initState() {
@@ -65,7 +77,9 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
                   Navigator.of(context).pop(),
                 }),
         automaticallyImplyLeading: false,
-        title: new Text("Check Order History"),
+        title: from == 'Feedback'
+            ? new Text(Translations.of(context).text('feedback'))
+            : new Text(Translations.of(context).text('check_order_history')),
 
         iconTheme: IconThemeData(
           color: Colors.white,
@@ -82,21 +96,75 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
   }
 
   bodyCard() {
-    return Expanded(
-      child: ListView.separated(
-        separatorBuilder: (context, index) {
-          return Divider();
-        },
-        scrollDirection: Axis.vertical,
-        shrinkWrap: true,
-        itemCount: orderList.length,
-        itemBuilder: (BuildContext context, int index) {
-//          final item = finalDepData[index];
-//          return tableRowDept(item);
-          return CardData(orderList[index]);
-        },
-      ),
-    );
+    return from == "Feedback"
+        ? orderList.where((i) => i.feedback_count == "0").toList().length > 0
+            ? Expanded(
+                child: ListView.separated(
+                  separatorBuilder: (context, index) {
+                    return Divider();
+                  },
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  itemCount: from == "Feedback"
+                      ? orderList
+                          .where((i) => i.feedback_count == "0")
+                          .toList()
+                          .length
+                      : orderList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return CardData(from == "Feedback"
+                        ? orderList
+                            .where((i) => i.feedback_count == "0")
+                            .toList()[index]
+                        : orderList[index]);
+                  },
+                ),
+              )
+            : Expanded(
+                child: Center(
+                  child: Text(
+                    Translations.of(context).text('no_feedback'),
+                    style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        color: Colors.black,
+                        fontSize: 14),
+                  ),
+                ),
+              )
+        : orderList.length > 0
+            ? Expanded(
+                child: ListView.separated(
+                  separatorBuilder: (context, index) {
+                    return Divider();
+                  },
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  itemCount: from == "Feedback"
+                      ? orderList
+                          .where((i) => i.feedback_count == "0")
+                          .toList()
+                          .length
+                      : orderList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return CardData(from == "Feedback"
+                        ? orderList
+                            .where((i) => i.feedback_count == "0")
+                            .toList()[index]
+                        : orderList[index]);
+                  },
+                ),
+              )
+            : Expanded(
+                child: Center(
+                  child: Text(
+                    'No orders found',
+                    style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        color: Colors.black,
+                        fontSize: 14),
+                  ),
+                ),
+              );
   }
 
   CardData(Orders orderList) {
@@ -140,7 +208,7 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
                       SizedBox(
                         height: 5.0,
                       ),
-                      Text("Ordered On:" + orderList.updated_at,
+                      Text(Translations.of(context).text('ordered_on') + orderList.updated_at,
                           style: TextStyle(color: Colors.black, fontSize: 11)),
                       SizedBox(height: 10.0),
                       Row(
@@ -152,7 +220,7 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
                                 shape: BoxShape.circle, color: Colors.red),
                           ),
                           SizedBox(width: 5.0),
-                          Text("Booking Date:" + orderList.created_at,
+                          Text(Translations.of(context).text('booking_date') + orderList.created_at,
                               style:
                                   TextStyle(color: Colors.black, fontSize: 11)),
                         ],
@@ -174,11 +242,40 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
                                 shape: BoxShape.circle, color: Colors.green),
                           ),
                           SizedBox(width: 5.0),
-                          Text("Booking Date:" + orderList.created_at,
+                          Text(Translations.of(context).text('booking_date') + orderList.created_at,
                               style:
                                   TextStyle(color: Colors.black, fontSize: 11)),
                         ],
                       ),
+                      from == 'Feedback' &&
+                              int.parse(orderList.feedback_count) == 0
+                          ? FlatButton.icon(
+                              shape: Border.all(width: 1, color: Colors.orange),
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    new MaterialPageRoute(
+                                        builder: (context) =>
+                                            new FeedbackDynamic(
+                                                orderList.id))).then((onValue) {
+                                  getServices();
+                                });
+                              },
+                              icon: Icon(
+                                Icons.feedback,
+                                color: Colors.grey,
+                              ),
+                              label: Text(
+                                "Give Feedback",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ))
+                          : SizedBox(
+                              height: 0,
+                              width: 0,
+                            )
                     ],
                   ),
                 ],
@@ -186,48 +283,50 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
               Flexible(
                 child: Column(
                   children: <Widget>[
-                    Text("\$" + orderList.discounted_price,
+                    Text("IQD " + orderList.discounted_price,
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 11,
                           fontFamily: 'Montserrat',
                           fontWeight: FontWeight.bold,
                         )),
-                    orderList.worker!=null?Padding(
-                      padding: EdgeInsets.all(10),
-                      child: new ClipRRect(
-                        borderRadius: new BorderRadius.circular(100),
-                        child: Stack(
-                          children: <Widget>[
-                            GestureDetector(
-                              onTap: () {
+                    orderList.worker != null
+                        ? Padding(
+                            padding: EdgeInsets.all(10),
+                            child: new ClipRRect(
+                              borderRadius: new BorderRadius.circular(100),
+                              child: Stack(
+                                children: <Widget>[
+                                  GestureDetector(
+                                    onTap: () {
 //                                Navigator.push(
 //                                    context,
 //                                    new MaterialPageRoute(
 //                                        builder: (context) => new SelectService()));
-                              },
-                              child: FadeInImage.assetNetwork(
-                                placeholder: 'assets/imgs/user.png',
-                                image: orderList.worker['avatar'],
-                                fit: BoxFit.cover,
-                                height: 70,
-                                width: 70,
+                                    },
+                                    child: FadeInImage.assetNetwork(
+                                      placeholder: 'assets/imgs/user.png',
+                                      image: orderList.worker['avatar'],
+                                      fit: BoxFit.cover,
+                                      height: 70,
+                                      width: 70,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ):Container(
-                        width: 70.0,
-                        height: 70.0,
-                        decoration: new BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: new DecorationImage(
-                            image: new ExactAssetImage(
-                                'assets/imgs/user.png'),
-                            fit: BoxFit.cover,
-                          ),
-                        )),
+                          )
+                        : Container(
+                            width: 70.0,
+                            height: 70.0,
+                            decoration: new BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: new DecorationImage(
+                                image:
+                                    new ExactAssetImage('assets/imgs/user.png'),
+                                fit: BoxFit.cover,
+                              ),
+                            )),
                   ],
                 ),
               ),
@@ -252,7 +351,6 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
         });
         try {
           Map data = json.decode(value);
-          print(data);
           if (data['code'] == 200) {
             List<Orders> tempList = new List();
             if (data['data'].length > 0) {
@@ -289,6 +387,7 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
                     data['data'][i]['service'],
                     data['data'][i]['address'],
                     data['data'][i]['worker'],
+                    data['data'][i]['feedback_count'],
                     tempBookingTrList));
               }
               setState(() {
@@ -310,7 +409,7 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -356,7 +455,7 @@ class _CheckOrderHistory extends State<CheckOrderHistory> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }

@@ -113,7 +113,7 @@ class _FAQsState extends State<FAQs> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -123,7 +123,7 @@ class _FAQsState extends State<FAQs> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -172,61 +172,63 @@ class _FAQsState extends State<FAQs> {
   CardData(FAQ faqList, int i) {
     return ExpandableNotifier(
       // <-- Provides ExpandableController to its children
-      child: Card(
-        elevation: 2,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expandable(
-              // <-- Driven by ExpandableController from ExpandableNotifier
-              collapsed: ExpandableButton(
-                // <-- Expands when tapped on the cover photo
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                      left: 10, right: 10, top: 10, bottom: 10),
-                  child: Text(
-                    "Q." + i.toString() + " " + faqList.question,
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: 'Montserrat',
-                        fontWeight: FontWeight.bold),
+      child:Padding(
+        padding: EdgeInsets.fromLTRB(8, 4, 8, 4),
+        child:  Card(
+          elevation: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expandable(
+                // <-- Driven by ExpandableController from ExpandableNotifier
+                collapsed: ExpandableButton(
+                  // <-- Expands when tapped on the cover photo
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                        left: 10, right: 10, top: 10, bottom: 10),
+                    child: Text(
+                      "Q." + i.toString() + " " + faqList.question,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: 'Montserrat',
+                          fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
-              ),
-              expanded: ExpandableButton(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                          padding: const EdgeInsets.only(
-                              left: 10, right: 10, top: 10, bottom: 10),
-                          child: Text(
-                            "Q." + i.toString() + " " + faqList.question,
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontFamily: 'Montserrat',
-                                fontWeight: FontWeight.bold),
-                          )),
-                      Container(
-                        decoration: BoxDecoration(
-                            color: Colors.lightGreen,
-                            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(2),bottomRight: Radius.circular(2))),
-                        child: Padding(
+                expanded: ExpandableButton(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
                             padding: const EdgeInsets.only(
                                 left: 10, right: 10, top: 10, bottom: 10),
                             child: Text(
-                              "Ans. " + faqList.answer,
+                              "Q." + i.toString() + " " + faqList.question,
                               style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   fontFamily: 'Montserrat',
                                   fontWeight: FontWeight.bold),
                             )),
-                      ),
+                        Container(
+                          decoration: BoxDecoration(
+                              color: Color(0xffF99233),
+                              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(2),bottomRight: Radius.circular(2))),
+                          child: Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 10, right: 10, top: 10, bottom: 10),
+                              child: Text(
+                                "Ans. " + faqList.answer,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontFamily: 'Montserrat',),
+                              )),
+                        ),
 //                      _childList(serviceList[index].otherservices),
-                    ]),
+                      ]),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

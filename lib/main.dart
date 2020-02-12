@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
         create: (_) => new LocaleModel(),
         child: Consumer<LocaleModel>(
             builder: (context, provider, child) => MaterialApp(
-                  title: 'myapp',
+                  title: 'Eleven',
                   locale: Provider.of<LocaleModel>(context).locale,
                   debugShowCheckedModeBanner: false,
                   localizationsDelegates: [

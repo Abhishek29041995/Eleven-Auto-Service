@@ -16,6 +16,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
+import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -78,20 +79,36 @@ class _LoginSate extends State<LoginPage> {
       print(e);
     }
     if (!mounted) return;
-
-    setState(() {
-      _authorized = authenticated ? 'Authorized' : 'Not Authorized';
-    });
+    _authorized = authenticated ? "Authenticated" : 'Not Authorized';
+    if (authenticated) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('token', 'loggedIn');
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => new LandingPage()),
+        (Route<dynamic> route) => false,
+      );
+    }
   }
 
   bool _isLoading = false;
+  bool showImage = true;
   String telecom = "iraq";
+  String bio = "";
   TextEditingController _controller = new TextEditingController();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    KeyboardVisibilityNotification().addNewListener(
+      onChange: (bool visible) {
+        setState(() {
+          showImage = !showImage;
+          print(showImage);
+        });
+      },
+    );
     checkIsLogin();
     _checkBiometrics();
   }
@@ -100,6 +117,7 @@ class _LoginSate extends State<LoginPage> {
     String _token = "";
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _token = prefs.getString("token");
+    bio = prefs.getString("bio");
     if (_token != "" && _token != null) {
       //replace it with the login page
       Navigator.pushAndRemoveUntil(
@@ -135,16 +153,20 @@ class _LoginSate extends State<LoginPage> {
 
   List<Widget> _buildForm(BuildContext context) {
     List<Widget> list = new List();
-    var mainView = Align(
-      alignment: Alignment.topCenter,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 40),
-        child: Image.asset(
-          'assets/imgs/logo.png',
-          scale: 2,
-        ),
-      ),
-    );
+    var mainView = showImage
+        ? Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: Image.asset(
+                'assets/imgs/logo.png',
+                height: 150,
+              ),
+            ),
+          )
+        : SizedBox(
+            height: 0,
+          );
     var footerView = Padding(
       padding: EdgeInsets.fromLTRB(5, 0, 5, 20),
       child: SafeArea(
@@ -188,7 +210,7 @@ class _LoginSate extends State<LoginPage> {
                 ),
                 Expanded(
                   child: TextField(
-                    maxLength: 10,
+                    maxLength: 11,
                     controller: _controller,
                     style: TextStyle(fontSize: 13.0),
                     decoration: new InputDecoration(
@@ -243,10 +265,11 @@ class _LoginSate extends State<LoginPage> {
                               Map data = json.decode(value);
                               presentToast(data['message'], context, 0);
                               if (data['code'] == 200) {
-                                Navigator.of(context).push(new MaterialPageRoute(
-                                    builder: (context) => new OtpPage(
-                                        _controller.text,
-                                        _selectedDialogCountry.phoneCode)));
+                                Navigator.of(context).push(
+                                    new MaterialPageRoute(
+                                        builder: (context) => new OtpPage(
+                                            _controller.text,
+                                            _selectedDialogCountry.phoneCode)));
                               }
                             });
                           });
@@ -273,7 +296,7 @@ class _LoginSate extends State<LoginPage> {
                                   width: 30,
                                 ),
                                 onTap: () {
-                                  _authenticate();
+                                  bio == 'enable' ? _authenticate() : null;
                                 },
                               )),
                         ],
@@ -385,7 +408,7 @@ class _LoginSate extends State<LoginPage> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -398,10 +421,14 @@ class _LoginSate extends State<LoginPage> {
     return Container(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Image.asset("assets/imgs/logo.png"),
+        child: Image.asset(
+          "assets/imgs/logo.png",
+          height: 500,
+          width: 500,
+        ),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }

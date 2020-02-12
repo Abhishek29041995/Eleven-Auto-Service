@@ -136,7 +136,7 @@ class _NearMe extends State<NearMe> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }

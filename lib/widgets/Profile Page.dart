@@ -1,3 +1,4 @@
+import 'package:eleve11/utils/translations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
@@ -236,7 +237,7 @@ class CustomAppBar extends StatelessWidget
                     child: Container(
                       width: 110,
                       height: 32,
-                      child: Center(child: Text("Edit Profile"),),
+                      child: Center(child: Text(Translations.of(context).text("edit_profile")),),
                       decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.all(Radius.circular(16)),

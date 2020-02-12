@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:eleve11/add_rides.dart';
 import 'package:eleve11/modal/Rides.dart';
 import 'package:eleve11/services/api_services.dart';
 import 'package:eleve11/utils/translations.dart';
@@ -113,7 +114,7 @@ class _MyRidesState extends State<MyRides> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -180,10 +181,33 @@ class _MyRidesState extends State<MyRides> {
                           SizedBox(
                             height: 5.0,
                           ),
-                          Text("Updated On:" + myRides.created_at,
+                          Text(Translations.of(context).text('updated_on') + myRides.created_at,
                               style:
                                   TextStyle(color: Colors.black, fontSize: 11)),
                           SizedBox(height: 10.0),
+                          FlatButton.icon(
+                              shape: Border.all(width: 1, color: Colors.orange),
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    new MaterialPageRoute(
+                                        builder: (context) =>
+                                        new AddRide(myRides)))
+                                    .then((onValue) {
+                                  getMyRides();
+                                });
+                              },
+                              icon: Icon(
+                                Icons.edit,
+                                color: Colors.grey,
+                              ),
+                              label: Text(
+                                "Edit Ride",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ))
                         ],
                       ),
                     ],
@@ -250,6 +274,7 @@ class _MyRidesState extends State<MyRides> {
         });
         Map data = json.decode(value);
         if (data['code'] == 200) {
+          print(data);
           List<Rides> tempList = new List();
           if (data['data'].length > 0) {
             for (var i = 0; i < data['data'].length; i++) {

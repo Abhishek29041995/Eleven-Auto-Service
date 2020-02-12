@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:circular_check_box/circular_check_box.dart';
 import 'package:eleve11/modal/child_services.dart';
 import 'package:eleve11/modal/service_list.dart';
@@ -52,6 +53,9 @@ class _SelectServiceState extends State<SelectService> {
   double latitude;
   double longitude;
 
+  bool isAvialble = true;
+  String stringOff = "";
+
   _SelectServiceState(String selectedServiceCat, String type, String address_id,
       double latitude, double longitude) {
     this.selectedServiceCat = selectedServiceCat;
@@ -74,6 +78,7 @@ class _SelectServiceState extends State<SelectService> {
     userData = codec.decode(prefs.getString("userData"));
     acccessToken = prefs.getString("accessToken");
     getServices();
+    checkHoliday();
   }
 
   @override
@@ -81,6 +86,7 @@ class _SelectServiceState extends State<SelectService> {
     // TODO: implement build
     return new SafeArea(
       child: Scaffold(
+        key: _scaffoldKey,
         body: Stack(
           children: _buildWidget(context),
         ),
@@ -337,19 +343,25 @@ class _SelectServiceState extends State<SelectService> {
                 child: RaisedButton(
                     child: new Text(Translations.of(context).text('continue')),
                     onPressed: () {
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) => new OverViewOrder(
-                                  serviceList
-                                      .where((i) => i.isChecked == true)
-                                      .toList(),
-                                  type,
-                                  price,
-                                  address_id,
-                                  latitude.toString(),
-                                  longitude.toString(),
-                                  selectedServiceCat)));
+                      if (isAvialble) {
+                        Navigator.push(
+                            context,
+                            new MaterialPageRoute(
+                                builder: (context) => new OverViewOrder(
+                                    serviceList
+                                        .where((i) => i.isChecked == true)
+                                        .toList(),
+                                    type,
+                                    price,
+                                    address_id,
+                                    latitude.toString(),
+                                    longitude.toString(),
+                                    selectedServiceCat)));
+                      } else {
+                        _displaySnackBar(
+                            Translations.of(context).text('not_accepting') +
+                                stringOff);
+                      }
                     },
                     textColor: Colors.white,
                     color: Color(0xff170e50),
@@ -379,6 +391,20 @@ class _SelectServiceState extends State<SelectService> {
     return list;
   }
 
+  _displaySnackBar(msg) {
+    final snackBar = new SnackBar(
+      content: Text(msg),
+      backgroundColor: Colors.black,
+      action: SnackBarAction(
+        label: Translations.of(context).text('ok'),
+        onPressed: () {
+          // Some code to undo the change!
+        },
+      ),
+    );
+    _scaffoldKey.currentState.showSnackBar(snackBar);
+  }
+
   Widget _customicon(BuildContext context, int index) {
     return Container(
       child: Padding(
@@ -386,14 +412,12 @@ class _SelectServiceState extends State<SelectService> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
 
   List<ServiceList> getServices() {
-    print(selectedServiceCat);
-    print(acccessToken);
     setState(() {
       _isLoading = true;
     });
@@ -430,6 +454,38 @@ class _SelectServiceState extends State<SelectService> {
               serviceList = tempList;
             });
           }
+        }
+      });
+    });
+  }
+
+  void checkHoliday() {
+    setState(() {
+      _isLoading = true;
+    });
+    print(DateFormat('yyyy-MM-dd').format(new DateTime.now()));
+    var request =
+        new MultipartRequest("POST", Uri.parse(api_url + "checkHoliday"));
+    request.fields['date'] =
+        DateFormat('yyyy-MM-dd').format(new DateTime.now());
+    ;
+    request.headers['Authorization'] = "Bearer $acccessToken";
+    commonMethod(request).then((onResponse) {
+      onResponse.stream.transform(utf8.decoder).listen((value) {
+        setState(() {
+          _isLoading = false;
+        });
+        Map data = json.decode(value);
+        print(data);
+        if (data['code'] == 200) {
+          setState(() {
+            isAvialble = true;
+          });
+        } else if (data['code'] == 401) {
+          setState(() {
+            isAvialble = false;
+            stringOff = data['data']['reason'];
+          });
         }
       });
     });

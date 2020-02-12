@@ -207,7 +207,7 @@ class _SubscriptionPlansState extends State<SubscriptionPlans>
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -306,7 +306,7 @@ class _SubscriptionPlansState extends State<SubscriptionPlans>
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -336,7 +336,7 @@ class _SubscriptionPlansState extends State<SubscriptionPlans>
                       RichText(
                           text: TextSpan(
                               style: TextStyle(color: Colors.black),
-                              text: "\$ ",
+                              text: "IQD ",
                               children: <TextSpan>[
                             TextSpan(
                                 text: item.price,

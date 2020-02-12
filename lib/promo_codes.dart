@@ -46,13 +46,13 @@ class _PromocodesPageState extends State<PromocodesPage> {
       child: Scaffold(
         key: _scaffoldKey,
         body: Stack(
-          children: _buildWidget(context),
+          children: _buildWidget(),
         ),
       ),
     );
   }
 
-  List<Widget> _buildWidget(BuildContext context) {
+  List<Widget> _buildWidget() {
     var list = new List<Widget>();
     var appBar = Padding(
       padding: EdgeInsets.only(top: 10),
@@ -117,28 +117,31 @@ class _PromocodesPageState extends State<PromocodesPage> {
 //    list.add(subscription);
     var servicelist = Padding(
       padding: EdgeInsets.only(top: 80),
-      child: ListView.separated(
-          separatorBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.only(left: 0, right: 0),
-                child: Divider(
-                  color: Colors.black12,
-                ),
-              ),
-          itemCount: serviceList.length,
-          itemBuilder: (BuildContext ctxt, int index) {
-            return Padding(
-                padding: const EdgeInsets.only(left: 30, right: 30, top: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(2.0)),
-                          color: Color(0xFFFFD180)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: GestureDetector(
-                          onLongPress: () {
+      child: serviceList.length > 0
+          ? ListView.separated(
+              separatorBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.only(left: 0, right: 0),
+                    child: Divider(
+                      color: Colors.black12,
+                    ),
+                  ),
+              itemCount: serviceList.length,
+              itemBuilder: (BuildContext ctxt, int index) {
+                return Padding(
+                    padding:
+                        const EdgeInsets.only(left: 30, right: 30, top: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(2.0)),
+                              color: Color(0xFFFFD180)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              onLongPress: () {
 //                            ClipboardManager.copyToClipBoard(serviceList[index].code).then((result) {
 //                              final snackBar = SnackBar(
 //                                content: Text('Copied to Clipboard'),
@@ -149,82 +152,98 @@ class _PromocodesPageState extends State<PromocodesPage> {
 //                              );
 //                              _scaffoldKey.currentState.showSnackBar(snackBar);
 //                            });
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              FadeInImage.assetNetwork(
-                                placeholder: 'assets/imgs/placeholder.png',
-                                image: serviceList[index].image,
-                                height: 20,
+                              },
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  FadeInImage.assetNetwork(
+                                    placeholder: 'assets/imgs/placeholder.png',
+                                    image: serviceList[index].image,
+                                    height: 20,
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Text(
+                                    serviceList[index].code,
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
                               ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Text(
-                                serviceList[index].code,
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      serviceList[index].name,
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    Divider(),
-                    Text(
-                      serviceList[index].description,
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    ExpandableNotifier(
-                      // <-- Provides ExpandableController to its children
-                        child: Column(
-                            children: [
-                              Expandable(
-                                // <-- Driven by ExpandableController from ExpandableNotifier
-                                  collapsed: ExpandableButton(child: Padding(
-                                    padding: const EdgeInsets.only(top: 4,bottom: 4,right: 4),
-                                    child: Text(
-                                        "+More",style:TextStyle(color: Colors.deepOrangeAccent,
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Text(
+                          serviceList[index].name,
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        Divider(),
+                        Text(
+                          serviceList[index].description,
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        ExpandableNotifier(
+                            // <-- Provides ExpandableController to its children
+                            child: Column(children: [
+                          Expandable(
+                              // <-- Driven by ExpandableController from ExpandableNotifier
+                              collapsed: ExpandableButton(
+                                  child: Padding(
+                                padding: const EdgeInsets.only(
+                                    top: 4, bottom: 4, right: 4),
+                                child: Text("+More",
+                                    style: TextStyle(
+                                      color: Colors.deepOrangeAccent,
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
-                                      fontFamily: 'Montserrat',)),
-                                  )),
-                                  expanded: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Html(
-                                        data: serviceList[index].terms,
-                                        defaultTextStyle:TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: 'Montserrat',),
-                                        padding: EdgeInsets.fromLTRB(
-                                            16, 8, 16, 8),
-                                      ),
-                                      ExpandableButton(child: Padding(
-                                        padding: const EdgeInsets.only(top: 4,bottom: 4,right: 4),
-                                        child: Text(
-                                            "-Less",style:TextStyle(color: Colors.deepOrangeAccent,
+                                      fontFamily: 'Montserrat',
+                                    )),
+                              )),
+                              expanded: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Html(
+                                    data: serviceList[index].terms,
+                                    defaultTextStyle: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Montserrat',
+                                    ),
+                                    padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                                  ),
+                                  ExpandableButton(
+                                      child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 4, bottom: 4, right: 4),
+                                    child: Text("-Less",
+                                        style: TextStyle(
+                                          color: Colors.deepOrangeAccent,
                                           fontSize: 13,
                                           fontWeight: FontWeight.bold,
-                                          fontFamily: 'Montserrat',)),
-                                      ))
-                                    ],
-                                  )),
-                            ])
-                    )
-                  ],
-                ));
-          }),
+                                          fontFamily: 'Montserrat',
+                                        )),
+                                  ))
+                                ],
+                              )),
+                        ]))
+                      ],
+                    ));
+              })
+          : Center(
+              child: Text(
+                'No promo codes available',
+                style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    color: Colors.black,
+                    fontSize: 14),
+              ),
+            ),
     );
     list.add(servicelist);
     if (_isLoading) {
@@ -253,7 +272,7 @@ class _PromocodesPageState extends State<PromocodesPage> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -304,12 +323,13 @@ class _PromocodesPageState extends State<PromocodesPage> {
           {_displaySnackBar(Translations.of(context).text('server_error'))});
     });
   }
+
   _displaySnackBar(msg) {
     final snackBar = new SnackBar(
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },

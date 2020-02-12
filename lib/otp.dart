@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpPage extends StatefulWidget {
@@ -26,6 +27,11 @@ class OtpPage extends StatefulWidget {
   OtpPageState createState() => OtpPageState(this.mobile, this.phoneCode);
 }
 
+enum MyDialogueAction {
+  yes,
+  no,
+}
+
 class OtpPageState extends State<OtpPage> {
   TextEditingController controller1 = new TextEditingController();
   TextEditingController controller2 = new TextEditingController();
@@ -33,7 +39,8 @@ class OtpPageState extends State<OtpPage> {
   TextEditingController controller4 = new TextEditingController();
   TextEditingController controller5 = new TextEditingController();
   TextEditingController controller6 = new TextEditingController();
-
+  final LocalAuthentication auth = LocalAuthentication();
+  bool _canCheckBiometrics = false;
   TextEditingController currController = new TextEditingController();
   bool _isLoading = false;
   Timer _timer;
@@ -64,6 +71,7 @@ class OtpPageState extends State<OtpPage> {
     super.initState();
     currController = controller1;
     startTimer();
+    _checkBiometrics();
   }
 
   void startTimer() {
@@ -200,14 +208,54 @@ class OtpPageState extends State<OtpPage> {
                   Navigator.of(context).push(new MaterialPageRoute(
                       builder: (context) => new SignUp(mobile)));
                 } else {
-                  storeLoginData(data['user'], data['access_token']);
-                  presentToast("Login successful", context, 0);
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new LandingPage()),
-                    (Route<dynamic> route) => false,
-                  );
+                  if (_canCheckBiometrics) {
+                    showDialog(
+                        context: context,
+                        builder: (_) => new AlertDialog(
+                              title: new Text('Enable biometric login'),
+                              content: new Text(
+                                "Please enable fingerprint authentication for easy and fast login",
+                                style: new TextStyle(fontSize: 30.0),
+                              ),
+                              actions: <Widget>[
+                                new FlatButton(
+                                    onPressed: () {
+                                      _dialogueResult(MyDialogueAction.yes);
+                                      storeLoginData(data['user'],
+                                          data['access_token'], "enable");
+                                      presentToast(
+                                          Translations.of(context)
+                                              .text('login_sucess'),
+                                          context,
+                                          0);
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        new MaterialPageRoute(
+                                            builder: (context) =>
+                                                new LandingPage()),
+                                        (Route<dynamic> route) => false,
+                                      );
+                                    },
+                                    child: new Text('yes')),
+                                new FlatButton(
+                                    onPressed: () {
+                                      _dialogueResult(MyDialogueAction.no);
+                                    },
+                                    child: new Text('no')),
+                              ],
+                            ));
+                  } else {
+                    storeLoginData(
+                        data['user'], data['access_token'], "disable");
+                    presentToast(Translations.of(context).text('login_sucess'),
+                        context, 0);
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      new MaterialPageRoute(
+                          builder: (context) => new LandingPage()),
+                      (Route<dynamic> route) => false,
+                    );
+                  }
                 }
               }).show();
         } else {
@@ -217,11 +265,33 @@ class OtpPageState extends State<OtpPage> {
     });
   }
 
-  Future<Null> storeLoginData(Map data, String accessToken) async {
+  Future<void> _checkBiometrics() async {
+    bool canCheckBiometrics;
+    try {
+      canCheckBiometrics = await auth.canCheckBiometrics;
+    } on PlatformException catch (e) {
+      print(e);
+    }
+    if (!mounted) return;
+
+    setState(() {
+      _canCheckBiometrics = canCheckBiometrics;
+    });
+    print("biometric ------- > $_canCheckBiometrics");
+  }
+
+  void _dialogueResult(MyDialogueAction value) {
+    print('you selected $value');
+    Navigator.pop(context);
+  }
+
+  Future<Null> storeLoginData(
+      Map data, String accessToken, String enable) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('token', 'loggedIn');
     prefs.setString('accessToken', accessToken);
     prefs.setString('userData', json.encode(data));
+    prefs.setString('bio', enable);
   }
 
   List<Widget> buildWidget(BuildContext context) {
@@ -488,7 +558,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("1");
                           },
-                          child: Text("1",
+                          child: Text(Translations.of(context).text('one'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -497,7 +567,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("2");
                           },
-                          child: Text("2",
+                          child: Text(Translations.of(context).text('two'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -506,7 +576,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("3");
                           },
-                          child: Text("3",
+                          child: Text(Translations.of(context).text('three'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -527,7 +597,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("4");
                           },
-                          child: Text("4",
+                          child: Text(Translations.of(context).text('four'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -536,7 +606,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("5");
                           },
-                          child: Text("5",
+                          child: Text(Translations.of(context).text('five'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -545,7 +615,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("6");
                           },
-                          child: Text("6",
+                          child: Text(Translations.of(context).text('six'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -566,7 +636,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("7");
                           },
-                          child: Text("7",
+                          child: Text(Translations.of(context).text('seven'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -575,7 +645,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("8");
                           },
-                          child: Text("8",
+                          child: Text(Translations.of(context).text('eight'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -584,7 +654,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("9");
                           },
-                          child: Text("9",
+                          child: Text(Translations.of(context).text('nine'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -611,7 +681,7 @@ class OtpPageState extends State<OtpPage> {
                           onPressed: () {
                             inputTextToField("0");
                           },
-                          child: Text("0",
+                          child: Text(Translations.of(context).text('zero'),
                               style: TextStyle(
                                   fontSize: 25.0, fontWeight: FontWeight.w400),
                               textAlign: TextAlign.center),
@@ -667,7 +737,8 @@ class OtpPageState extends State<OtpPage> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label:
+            Translations.of(context).text(Translations.of(context).text('ok')),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -683,7 +754,7 @@ class OtpPageState extends State<OtpPage> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }

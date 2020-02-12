@@ -19,6 +19,9 @@ class _ContactUsState extends State<ContactUs> {
 
   TextEditingController _subjectcontroller = new TextEditingController();
   TextEditingController _messagecontroller = new TextEditingController();
+  String mobile = "";
+  String email = "";
+  String address = "";
 
   @override
   void initState() {
@@ -29,6 +32,7 @@ class _ContactUsState extends State<ContactUs> {
   Future<Null> checkIsLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     acccessToken = prefs.getString("accessToken");
+    getContactDetails();
   }
 
   @override
@@ -81,7 +85,7 @@ class _ContactUsState extends State<ContactUs> {
           child: Row(
             children: <Widget>[
               IconButton(
-                onPressed: () => launch("tel:+964 750 425 5011"),
+                onPressed: () => launch("tel:"+mobile),
                 icon: Icon(
                   Icons.call,
                   color: Colors.orange,
@@ -93,7 +97,7 @@ class _ContactUsState extends State<ContactUs> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      "Contact",
+                      Translations.of(context).text('contact'),
                       style: TextStyle(
                           fontSize: 14,
                           fontFamily: 'Montserrat',
@@ -101,7 +105,7 @@ class _ContactUsState extends State<ContactUs> {
                           fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      "+964 750 425 5011",
+                      mobile,
                       style: TextStyle(
                         fontSize: 13,
                         fontFamily: 'Montserrat',
@@ -119,7 +123,7 @@ class _ContactUsState extends State<ContactUs> {
           child: Row(
             children: <Widget>[
               IconButton(
-                onPressed: () => launch("mailto:pavelyounus@gmail.com"),
+                onPressed: () => launch("mailto:"+email),
                 icon: Icon(
                   Icons.mail,
                   color: Colors.orange,
@@ -140,7 +144,7 @@ class _ContactUsState extends State<ContactUs> {
                       ),
                     ),
                     Text(
-                      "pavelyounus@gmail.com",
+                     email,
                       style: TextStyle(
                         fontSize: 13,
                         fontFamily: 'Montserrat',
@@ -158,7 +162,7 @@ class _ContactUsState extends State<ContactUs> {
           child: Row(
             children: <Widget>[
               IconButton(
-                onPressed: () => launch("mailto:pavelyounus@gmail.com"),
+                onPressed: () => {},
                 icon: Icon(
                   Icons.location_on,
                   color: Colors.orange,
@@ -170,7 +174,7 @@ class _ContactUsState extends State<ContactUs> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      "Address",
+                      Translations.of(context).text('address'),
                       style: TextStyle(
                           fontSize: 14,
                           fontFamily: 'Montserrat',
@@ -178,7 +182,7 @@ class _ContactUsState extends State<ContactUs> {
                           fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      "Iraq, Erbil, Italian Village 1 #101",
+                      address,
                       softWrap: true,
                       style: TextStyle(
                         fontSize: 13,
@@ -201,7 +205,7 @@ class _ContactUsState extends State<ContactUs> {
               ),
               Expanded(
                   child: Text(
-                "Or Write us Directly",
+                Translations.of(context).text('writeus'),
                 style: TextStyle(
                   color: Colors.orange,
                   fontSize: 12,
@@ -226,7 +230,7 @@ class _ContactUsState extends State<ContactUs> {
                 height: double.minPositive,
               ),
               counterText: "",
-              labelText: "Subject",
+              labelText: Translations.of(context).text('subject'),
               fillColor: Colors.white,
               border: new OutlineInputBorder(
                 borderRadius: new BorderRadius.circular(5.0),
@@ -252,7 +256,7 @@ class _ContactUsState extends State<ContactUs> {
               ),
               counterText: "",
               alignLabelWithHint: true,
-              labelText: "Message",
+              labelText: Translations.of(context).text('message'),
               fillColor: Colors.white,
               border: new OutlineInputBorder(
                 borderRadius: new BorderRadius.circular(5.0),
@@ -280,9 +284,9 @@ class _ContactUsState extends State<ContactUs> {
               color: Colors.lightGreen,
               onPressed: () {
                 if (_subjectcontroller.text == '') {
-                  _displaySnackBar('Enter Subject');
+                  _displaySnackBar(Translations.of(context).text('enter_subject'));
                 } else if (_messagecontroller.text == '') {
-                  _displaySnackBar('Enter Message');
+                  _displaySnackBar(Translations.of(context).text('enter_message'));
                 } else {
                   submitQuery();
                 }
@@ -319,7 +323,7 @@ class _ContactUsState extends State<ContactUs> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -329,7 +333,7 @@ class _ContactUsState extends State<ContactUs> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -360,6 +364,35 @@ class _ContactUsState extends State<ContactUs> {
             setState(() {
               _subjectcontroller.text = "";
               _messagecontroller.text = "";
+            });
+          }
+        } catch (onError) {
+          _displaySnackBar(Translations.of(context).text('server_error'));
+        }
+      }).onError((err) =>
+          {_displaySnackBar(Translations.of(context).text('server_error'))});
+    });
+  }
+
+  void getContactDetails() {
+    setState(() {
+      _isLoading = true;
+    });
+    var request = new MultipartRequest("GET", Uri.parse(api_url + "contact"));
+    request.headers['Authorization'] = "Bearer $acccessToken";
+    commonMethod(request).then((onResponse) {
+      onResponse.stream.transform(utf8.decoder).listen((value) {
+        setState(() {
+          _isLoading = false;
+        });
+        try {
+          Map data = json.decode(value);
+          print(data);
+          if (data['code'] == 200) {
+            setState(() {
+              mobile = data['data']['phone'];
+              email = data['data']['email'];
+              address = data['data']['address'];
             });
           }
         } catch (onError) {

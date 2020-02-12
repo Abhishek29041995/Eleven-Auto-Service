@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:eleve11/landing_page.dart';
 import 'package:eleve11/modal/service.dart';
 import 'package:eleve11/service_detail_page.dart';
@@ -8,6 +9,8 @@ import 'package:eleve11/utils/datepicker_formfield.dart';
 import 'package:eleve11/utils/image_picker_handler.dart';
 import 'package:eleve11/utils/pinkRedGradient.dart';
 import 'package:eleve11/utils/translations.dart';
+import 'package:eleve11/widgets/date_picker.dart';
+import 'package:eleve11/widgets/flutter_date_picker.dart';
 import 'package:eleve11/widgets/wavy_design.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +19,7 @@ import 'package:gender_selection/gender_selection.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUp extends StatefulWidget {
@@ -26,6 +30,11 @@ class SignUp extends StatefulWidget {
   }
 
   _SignUp createState() => _SignUp(this.mobile);
+}
+
+enum MyDialogueAction {
+  yes,
+  no,
 }
 
 class _SignUp extends State<SignUp>
@@ -42,6 +51,8 @@ class _SignUp extends State<SignUp>
   AnimationController _controller;
   ImagePickerHandler imagePicker;
   String mobile;
+  final LocalAuthentication auth = LocalAuthentication();
+  bool _canCheckBiometrics = false;
 
   _SignUp(String mobile) {
     this.mobile = mobile;
@@ -51,6 +62,7 @@ class _SignUp extends State<SignUp>
   void initState() {
     // TODO: implement initState
     super.initState();
+    _checkBiometrics();
     _controller = new AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -77,6 +89,33 @@ class _SignUp extends State<SignUp>
         ),
       ),
     );
+  }
+
+  Future<void> _checkBiometrics() async {
+    bool canCheckBiometrics;
+    try {
+      canCheckBiometrics = await auth.canCheckBiometrics;
+    } on PlatformException catch (e) {
+      print(e);
+    }
+    if (!mounted) return;
+
+    setState(() {
+      _canCheckBiometrics = canCheckBiometrics;
+    });
+    print("biometric ------- > $_canCheckBiometrics");
+  }
+
+  void _dialogueResult(MyDialogueAction value) {
+    print('you selected $value');
+    Navigator.pop(context);
+  }
+
+  void _setDate() {
+    Navigator.of(context).pop();
+    _datecontroller.text = dobKey.currentState.dobStrMonth +
+        ' ${dobKey.currentState.dobDate}' +
+        ' ${dobKey.currentState.dobYear}';
   }
 
   List<Widget> _buildForm(BuildContext context) {
@@ -142,12 +181,20 @@ class _SignUp extends State<SignUp>
                       ]),
                     ),
                   )
-                : new ClipRRect(
-                borderRadius: new BorderRadius.circular(100),
-                child: Stack(children: <Widget>[
-                  Image.file(_image,
-                      height: 90, width: 90, fit: BoxFit.cover)
-                ])),
+                : new Container(
+                    height: 90.0,
+                    width: 90.0,
+                    decoration: new BoxDecoration(
+                      color: const Color(0xff7c94b6),
+                      image: new DecorationImage(
+                        image: new ExactAssetImage(_image.path),
+                        fit: BoxFit.cover,
+                      ),
+                      border: Border.all(color: Colors.red, width: 2.0),
+                      borderRadius:
+                          new BorderRadius.all(const Radius.circular(80.0)),
+                    ),
+                  ),
           ),
         ),
         Padding(
@@ -240,30 +287,40 @@ class _SignUp extends State<SignUp>
         ),
         Padding(
           padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 4.0),
-          child: new DateTimeField(
-            format: format,
-            controller: _datecontroller,
-            decoration: new InputDecoration(
-              contentPadding: EdgeInsets.all(15.0),
-              counterStyle: TextStyle(
-                height: double.minPositive,
-              ),
-              counterText: "",
-              labelText: Translations.of(context).text('dob'),
-              fillColor: Colors.white,
-              border: new OutlineInputBorder(
-                borderRadius: new BorderRadius.circular(5.0),
-                borderSide: new BorderSide(),
-              ),
-              //fillColor: Colors.green
-            ),
-            onShowPicker: (context, currentValue) {
-              return showDatePicker(
-                  context: context,
-                  firstDate: DateTime(1900),
-                  initialDate: currentValue ?? DateTime.now(),
-                  lastDate: DateTime(2100));
+          child: FlatButton(
+            padding: EdgeInsets.all(0),
+            onPressed: () {
+              return _ScaffoldStateKey.currentState.showBottomSheet<Null>(
+                (BuildContext context) {
+                  return DatePicker(
+                    key: dobKey,
+                    setDate: _setDate,
+                    customShape: StadiumBorder(
+                        side: BorderSide(
+                      color: Color(0xff170e50),
+                    )),
+                  );
+                },
+              );
             },
+            child: TextFormField(
+              controller: _datecontroller,
+              enabled: false,
+              decoration: new InputDecoration(
+                contentPadding: EdgeInsets.all(15.0),
+                counterStyle: TextStyle(
+                  height: double.minPositive,
+                ),
+                counterText: "",
+                labelText: Translations.of(context).text('dob'),
+                fillColor: Colors.white,
+                border: new OutlineInputBorder(
+                  borderRadius: new BorderRadius.circular(5.0),
+                  borderSide: new BorderSide(),
+                ),
+                //fillColor: Colors.green
+              ),
+            ),
           ),
         ),
         SizedBox(
@@ -305,26 +362,22 @@ class _SignUp extends State<SignUp>
                 child: RaisedButton(
                     child: new Text(Translations.of(context).text('signup')),
                     onPressed: () async {
-                      if (_image == null) {
-                        _displaySnackBar("Upload profile image");
-                      } else if (selectedgender == "") {
-                        _displaySnackBar("Select gender");
+                      if (selectedgender == "") {
+                        _displaySnackBar(Translations.of(context).text('select_gender'));
                       } else if (_namecontroller.text == "") {
-                        _displaySnackBar("Enter your name");
+                        _displaySnackBar(Translations.of(context).text('enter_name'));
                       } else if (_emailcontroller.text == "") {
-                        _displaySnackBar("Enter your email id");
+                        _displaySnackBar(Translations.of(context).text('enter_email'));
                       } else if (!validateEmail(_emailcontroller.text)) {
-                        _displaySnackBar("Enter valid email id");
+                        _displaySnackBar(Translations.of(context).text('enter_v_email'));
                       } else if (_datecontroller.text == "") {
-                        _displaySnackBar("Enter your date of birth");
+                        _displaySnackBar(Translations.of(context).text('enter_dob'));
                       } else if (_hearAboutUscontroller.text == "") {
                         _displaySnackBar(
-                            "Please let us know how you hear about us?");
+                            Translations.of(context).text('please_let_us_know'));
                       } else {
-                        print("111111111111111");
                         print(selectedgender);
                         setState(() {
-                          print("111111111111111");
                           print(selectedgender);
                           _isLoading = true;
                         });
@@ -336,9 +389,11 @@ class _SignUp extends State<SignUp>
                         request.fields['dob'] = _datecontroller.text;
                         request.fields['heard_by'] =
                             _hearAboutUscontroller.text;
-                        request.files.add(await MultipartFile.fromPath(
-                            'avatar', _image.path,
-                            contentType: new MediaType('image', 'jpeg')));
+                        if (_image != null) {
+                          request.files.add(await MultipartFile.fromPath(
+                              'avatar', _image.path,
+                              contentType: new MediaType('image', 'jpeg')));
+                        }
                         request.fields['email'] = _emailcontroller.text;
                         commonMethod(request).then((onResponse) {
                           onResponse.stream
@@ -347,25 +402,70 @@ class _SignUp extends State<SignUp>
                             setState(() {
                               _isLoading = false;
                             });
-                            try{
-                            Map data = json.decode(value);
-                            print(data);
-                            presentToast(data['message'], context, 0);
-                            if (data['code'] == 200) {
-                              storeLoginData(
-                                  data['user'], data['access_token']);
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                new MaterialPageRoute(
-                                    builder: (context) => new LandingPage()),
-                                (Route<dynamic> route) => false,
-                              );
-                            }
+                            try {
+                              Map data = json.decode(value);
+                              print(data);
+                              presentToast(data['message'], context, 0);
+                              if (data['code'] == 200) {
+                                if (_canCheckBiometrics) {
+                                  showDialog(
+                                      context: context,
+                                      builder: (_) => new AlertDialog(
+                                            title: new Text(
+                                              Translations.of(context).text('enable_bio_login')),
+                                            content: new Text(
+                                              Translations.of(context).text('please_enable_fingerprint'),
+                                              style:
+                                                  new TextStyle(fontSize: 30.0),
+                                            ),
+                                            actions: <Widget>[
+                                              new FlatButton(
+                                                  onPressed: () {
+                                                    _dialogueResult(
+                                                        MyDialogueAction.yes);
+                                                    storeLoginData(
+                                                        data['user'],
+                                                        data['access_token'],
+                                                        "enable");
+                                                    Navigator
+                                                        .pushAndRemoveUntil(
+                                                      context,
+                                                      new MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              new LandingPage()),
+                                                      (Route<dynamic> route) =>
+                                                          false,
+                                                    );
+                                                  },
+                                                  child: new Text('yes')),
+                                              new FlatButton(
+                                                  onPressed: () {
+                                                    _dialogueResult(
+                                                        MyDialogueAction.no);
+                                                  },
+                                                  child: new Text('no')),
+                                            ],
+                                          ));
+                                } else {
+                                  storeLoginData(data['user'],
+                                      data['access_token'], "disable");
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    new MaterialPageRoute(
+                                        builder: (context) =>
+                                            new LandingPage()),
+                                    (Route<dynamic> route) => false,
+                                  );
+                                }
+                              }
                             } catch (onError) {
-                              _displaySnackBar(Translations.of(context).text('server_error'));
+                              _displaySnackBar(Translations.of(context)
+                                  .text('server_error'));
                             }
-                          }).onError((err) =>
-                          {_displaySnackBar(Translations.of(context).text('server_error'))});
+                          }).onError((err) => {
+                                    _displaySnackBar(Translations.of(context)
+                                        .text('server_error'))
+                                  });
                         });
                       }
                     },
@@ -402,7 +502,7 @@ class _SignUp extends State<SignUp>
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -415,10 +515,14 @@ class _SignUp extends State<SignUp>
     return Container(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Image.asset("assets/imgs/logo.png"),
+        child: Image.asset(
+          "assets/imgs/logo.png",
+          height: 500,
+          width: 500,
+        ),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -437,10 +541,12 @@ class _SignUp extends State<SignUp>
     return emailValid;
   }
 
-  Future<Null> storeLoginData(Map data, String accessToken) async {
+  Future<Null> storeLoginData(
+      Map data, String accessToken, String enable) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('token', 'loggedIn');
     prefs.setString('accessToken', accessToken);
     prefs.setString('userData', json.encode(data));
+    prefs.setString('bio', enable);
   }
 }

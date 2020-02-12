@@ -1,4 +1,6 @@
 import 'package:eleve11/modal/orders.dart';
+import 'package:eleve11/services/api_services.dart';
+import 'package:eleve11/show_directions.dart';
 import 'package:eleve11/track_history.dart';
 import 'package:eleve11/utils/translations.dart';
 import 'package:eleve11/widgets/dashed_line.dart';
@@ -59,7 +61,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
               Navigator.of(context).pop(),
             }),
         automaticallyImplyLeading: false,
-        title: new Text("Check Order History Details"),
+        title: new Text(Translations.of(context).text('check_order_detail')),
 
         iconTheme: IconThemeData(
           color: Colors.white,
@@ -92,7 +94,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(10.0),
-                                child: new Text("Service Details",
+                                child: new Text(Translations.of(context).text('service_details'),
                                     style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black,
@@ -133,7 +135,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(10.0),
-                                child: new Text("Address Details",
+                                child: new Text(Translations.of(context).text('address_details'),
                                     style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black,
@@ -172,17 +174,17 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                               )
                             ],
                           )))),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: new RaisedButton(
-                  child: new Text(Translations.of(context).text('cancel')),
-                  textColor: Colors.white,
-                  color: Colors.red,
-                  onPressed: () {},
-                  shape: new RoundedRectangleBorder(
-                      borderRadius: new BorderRadius.circular(20.0)),
-                ),
-              )
+//              Padding(
+//                padding: const EdgeInsets.all(16.0),
+//                child: new RaisedButton(
+//                  child: new Text(Translations.of(context).text('cancel')),
+//                  textColor: Colors.white,
+//                  color: Colors.red,
+//                  onPressed: () {},
+//                  shape: new RoundedRectangleBorder(
+//                      borderRadius: new BorderRadius.circular(20.0)),
+//                ),
+//              )
             ],
           )
 //        ),
@@ -304,7 +306,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
-                                  new Text("Reference Number:",
+                                  new Text(Translations.of(context).text('reference_no'),
                                       style: TextStyle(
                                           fontFamily: 'Montserrat',
                                           fontWeight: FontWeight.bold,
@@ -324,18 +326,27 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        TrackHistory(
-                                            orderList.booking_progress)),
-                              );
+                              if(orderList.worker!=null){
+//                                Navigator.push(
+//                                  context,
+//                                  MaterialPageRoute(
+//                                      builder: (context) =>
+//                                          TrackHistory(
+//                                              orderList.booking_progress)),
+//                                );
+                                Navigator.push(
+                                  context,
+                                  new MaterialPageRoute(
+                                      builder: (context) =>
+                                          new ShowDirections(orderList.worker,orderList.address)));
+                              }else{
+                                presentToast(Translations.of(context).text('order_not_assigned'), context, 0);
+                              }
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                "Track",
+                                Translations.of(context).text('track'),
                                 style: TextStyle(
                                     fontFamily: 'Montserrat',
                                     fontWeight: FontWeight.bold,
@@ -362,7 +373,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                                       color: Colors.red),
                                 ),
                                 SizedBox(width: 5.0),
-                                Text("Booking Date:" + orderList.created_at,
+                                Text(Translations.of(context).text('booking_date') + orderList.created_at,
                                     style: TextStyle(
                                         fontFamily: 'Montserrat',
                                         color: Colors.black,
@@ -387,7 +398,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                                       color: Colors.green),
                                 ),
                                 SizedBox(width: 5.0),
-                                Text("Booking Date:" + orderList.created_at,
+                                Text(Translations.of(context).text('booking_date') + orderList.created_at,
                                     style: TextStyle(
                                         fontFamily: 'Montserrat',
                                         color: Colors.black,
@@ -407,7 +418,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                new Text("Ordered On:",
+                                new Text(Translations.of(context).text('ordered_on'),
                                     style: TextStyle(
                                       fontFamily: 'Montserrat',
                                       color: Colors.black,
@@ -434,7 +445,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              new Text("Pricing Details",
+                              new Text(Translations.of(context).text('pricing_detail'),
                                   style: TextStyle(
                                     fontFamily: 'Montserrat',
                                     color: Colors.black,
@@ -447,7 +458,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                                   mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Original Price",
+                                    Text(Translations.of(context).text('original_price'),
                                         style: TextStyle(
                                             fontFamily: 'Montserrat',
                                             fontSize: 12)),
@@ -465,7 +476,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                                   mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Subscription",
+                                    Text(Translations.of(context).text('subscription'),
                                         style: TextStyle(
                                             fontFamily: 'Montserrat',
                                             fontSize: 12)),
@@ -484,7 +495,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                                   mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Promo Applied",
+                                    Text(Translations.of(context).text('promo_applied'),
                                         style: TextStyle(
                                             fontFamily: 'Montserrat',
                                             fontSize: 12)),
@@ -505,9 +516,9 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                                   children: <Widget>[
                                     Text(orderList.subscription_discount != '' &&
                                         orderList.discount_type != '0'
-                                        ? "Discount (Subscription + Promo)":orderList.subscription_discount == '' &&
-                                        orderList.discount_type != '0'?"Discount (Promo)":orderList.subscription_discount != '' &&
-                                        orderList.discount_type == '0'?"Discount (Subscription)":"Discount",
+                                        ? Translations.of(context).text('discount_subpluspromo'):orderList.subscription_discount == '' &&
+                                        orderList.discount_type != '0'?Translations.of(context).text('discount_promo'):orderList.subscription_discount != '' &&
+                                        orderList.discount_type == '0'?Translations.of(context).text('discount_sub'):Translations.of(context).text('discount'),
                                         style: TextStyle(
                                             fontFamily: 'Montserrat',
                                             fontSize: 12)),
@@ -528,8 +539,8 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                                   children: <Widget>[
                                     Text(
                                         orderList.payment_type == 'COD'
-                                            ? "Amount to pay"
-                                            : "Amount Paid",
+                                            ? Translations.of(context).text('amounttopay')
+                                            : Translations.of(context).text('amountpaid'),
                                         style: TextStyle(
                                             fontFamily: 'Montserrat',
                                             fontSize: 12)),

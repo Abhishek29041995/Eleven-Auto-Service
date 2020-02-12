@@ -46,7 +46,7 @@ class _ProfilePageDesign extends State<ProfilePageDesign> {
         child: userData!=null?Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text("Name"),
+            Text(Translations.of(context).text('name')),
             SizedBox(
               height: 4,
             ),
@@ -58,7 +58,7 @@ class _ProfilePageDesign extends State<ProfilePageDesign> {
               height: 16,
             ),
             Text(
-              "Email",
+              Translations.of(context).text('email'),
               style: _style(),
             ),
             SizedBox(
@@ -69,7 +69,7 @@ class _ProfilePageDesign extends State<ProfilePageDesign> {
               height: 16,
             ),
             Text(
-              "Date of birth",
+              Translations.of(context).text('dob'),
               style: _style(),
             ),
             SizedBox(
@@ -80,7 +80,8 @@ class _ProfilePageDesign extends State<ProfilePageDesign> {
               height: 16,
             ),
             Text(
-              "Mobile number",
+              Translations.of(context)
+                  .text('mobile_number'),
               style: _style(),
             ),
             SizedBox(
@@ -132,7 +133,7 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
                   },
                 ),
                 Text(
-                  "Profile",
+                  Translations.of(context).text('profile'),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -215,7 +216,7 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
                       height: 32,
                       child: Center(
                         child: Text(
-                          "Edit Profile",
+                          Translations.of(context).text("edit_profile"),
                           style: TextStyle(color: Colors.white),
                         ),
                       ),

@@ -1,4 +1,5 @@
 import 'package:eleve11/modal/booking_track.dart';
+import 'package:eleve11/utils/translations.dart';
 import 'package:flutter/material.dart';
 
 class TrackHistory extends StatefulWidget {
@@ -51,7 +52,7 @@ class _TrackHistory extends State<TrackHistory> {
                   Navigator.of(context).pop(),
                 }),
         automaticallyImplyLeading: false,
-        title: new Text("Track History"),
+        title: new Text(Translations.of(context).text("track_history")),
 
         iconTheme: IconThemeData(
           color: Colors.white,
@@ -97,7 +98,7 @@ class _TrackHistory extends State<TrackHistory> {
               },
             )
           : Center(
-              child: Text("No tracking updates"),
+              child: Text(Translations.of(context).text("no_tracking")),
             ),
     );
   }

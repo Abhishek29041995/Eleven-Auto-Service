@@ -1,3 +1,4 @@
+import 'package:eleve11/utils/translations.dart';
 import 'package:eleve11/widgets/search_place/geocoding.dart';
 import 'package:eleve11/widgets/search_place/place.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +109,7 @@ class _SearchMapPlaceWidgetState extends State<SearchMapPlaceWidget>
   Widget build(BuildContext context) => Container(
         width: MediaQuery.of(context).size.width * 0.9,
         child: _searchContainer(
-          child:  _searchInput(context),
+          child: _searchInput(context),
         ),
       );
 
@@ -156,7 +157,7 @@ class _SearchMapPlaceWidgetState extends State<SearchMapPlaceWidget>
               decoration: _inputStyle(),
               controller: _textEditingController,
               style:
-              TextStyle(fontSize: MediaQuery.of(context).size.width * 0.04),
+                  TextStyle(fontSize: MediaQuery.of(context).size.width * 0.04),
               onChanged: (value) => setState(() => _autocompletePlace(value)),
             ),
           ),
@@ -196,7 +197,7 @@ class _SearchMapPlaceWidgetState extends State<SearchMapPlaceWidget>
   // Styling
   InputDecoration _inputStyle() {
     return InputDecoration(
-      hintText: this.widget.placeholder,
+      hintText: Translations.of(context).text('search'),
       border: InputBorder.none,
     );
   }

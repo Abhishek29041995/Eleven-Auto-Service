@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="eleve11"
+        android:label="Eleven"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id"/>

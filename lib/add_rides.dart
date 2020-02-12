@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:eleve11/modal/Rides.dart';
 import 'package:eleve11/modal/manufacturer_list.dart';
 import 'package:eleve11/services/api_services.dart';
 import 'package:eleve11/utils/datepicker_formfield.dart';
@@ -17,36 +19,130 @@ import 'package:intl/intl.dart';
 import 'package:http_parser/http_parser.dart';
 
 class AddRide extends StatefulWidget {
-  _AddRideState createState() => _AddRideState();
+  Rides myRides;
+
+  AddRide(Rides myRides) {
+    this.myRides = myRides;
+  }
+
+  _AddRideState createState() => _AddRideState(this.myRides);
 }
 
 class _AddRideState extends State<AddRide>
     with TickerProviderStateMixin, ImagePickerListener {
+  DateTime _date = DateTime.now();
   Map<String, dynamic> formData;
   Map userData = null;
   String acccessToken = "";
   bool _isLoading = false;
   bool allOk = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
-  final GlobalKey _pickerKey = GlobalKey();
   List<ManufacturerList> manufacturerList = new List();
+  List<ManufacturerList> finalmanufacturerList = new List();
   List<ManufacturerList> modelList = new List();
+  List<ManufacturerList> finalmodelList = new List();
   List<Step> my_steps = new List();
   bool ismanufactufrer = true;
   int current_step = 0;
   TextEditingController _manufacturer = TextEditingController();
   TextEditingController _cardmodel = TextEditingController();
   TextEditingController _yearController = TextEditingController();
+  int manufacturerId;
+  int carModelId;
+  String carModeltype;
   final format = DateFormat("yyyy");
   File _image;
   AnimationController _controller;
   ImagePickerHandler imagePicker;
 
-  _AddRideState() {
+  final searchController1 = TextEditingController();
+  final searchController2 = TextEditingController();
+  int _selectedYear;
+  int _fromYear;
+  int _yearRange;
+  int _initialYear;
+
+  int get dobYear => _initialYear;
+
+  ///Year lower bound (ex: 1920)
+  int fromYear;
+
+  ///Year upper bound (ex: 2020)
+  int toYear;
+
+//Ex: 1974
+  int initialYear;
+  Rides myRides;
+  FixedExtentScrollController controller1 = FixedExtentScrollController();
+  FixedExtentScrollController controller2 = FixedExtentScrollController();
+
+  _AddRideState(Rides myRides) {
+    this.myRides = myRides;
     formData = {
       'manufacturer': '',
       'model': '',
     };
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    int _toYear = toYear ?? _date.year;
+    super.initState();
+    _fromYear = fromYear ?? _date.year - 100;
+    _initialYear = initialYear ?? _date.year;
+    assert(_fromYear <= _initialYear && _initialYear <= _toYear,
+        "Date Interval Error");
+    _selectedYear = _initialYear - _fromYear;
+    _yearRange = _toYear - _fromYear;
+    _controller = new AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    imagePicker = new ImagePickerHandler(this, _controller);
+    imagePicker.init();
+    checkIsLogin();
+    // Start listening to changes.
+    searchController1.addListener(() {
+      // Start listening to changes.
+      List<ManufacturerList> tempList = new List();
+      if (searchController1.text.length > 0) {
+        tempList = finalmanufacturerList
+            .where((i) => i.name
+                .toLowerCase()
+                .contains(searchController1.text.toLowerCase()))
+            .toList();
+      } else {
+        tempList = finalmanufacturerList;
+      }
+      manufacturerList = tempList;
+      controller1.animateToItem(0,
+          duration: Duration(microseconds: 20), curve: ElasticInCurve());
+      manufacturerId = int.parse(manufacturerList[0].id);
+      _manufacturer.text = manufacturerList[0].name;
+      formData['manufacturer'] = manufacturerList[0].name;
+    });
+
+    searchController2.addListener(() {
+      // Start listening to changes.
+      List<ManufacturerList> tempList = new List();
+      if (searchController2.text.length > 0) {
+        tempList = finalmodelList
+            .where((i) => i.name
+                .toLowerCase()
+                .contains(searchController2.text.toLowerCase()))
+            .toList();
+      } else {
+        tempList = finalmodelList;
+      }
+      modelList = tempList;
+      controller2.animateToItem(0,
+          duration: Duration(microseconds: 20), curve: ElasticInCurve());
+      _cardmodel.text = modelList[0].name;
+      carModelId = int.parse(modelList[0].id);
+      carModeltype = modelList[0].type;
+      formData['model'] = modelList[0].name;
+    });
   }
 
   @override
@@ -60,32 +156,7 @@ class _AddRideState extends State<AddRide>
   userImage(File image) {
     setState(() {
       _image = image;
-      my_steps[my_steps.length - 1] = Step(
-          // Title of the Step
-          title: Text("Add Photo"),
-          // Content, it can be any widget here. Using basic Text for this example
-          content: Container(
-            child: new ClipRRect(
-                borderRadius: new BorderRadius.circular(8.0),
-                child: Stack(children: <Widget>[
-                  Image.file(_image, height: 90, width: 150, fit: BoxFit.cover)
-                ])),
-          ),
-          isActive: true);
     });
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _controller = new AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    imagePicker = new ImagePickerHandler(this, _controller);
-    imagePicker.init();
-    checkIsLogin();
   }
 
   @override
@@ -104,7 +175,7 @@ class _AddRideState extends State<AddRide>
         }
       },
       child: Scaffold(
-        resizeToAvoidBottomPadding: false,
+          resizeToAvoidBottomPadding: false,
           key: _scaffoldKey,
           body: Stack(
             children: _buildWidget(context),
@@ -140,7 +211,9 @@ class _AddRideState extends State<AddRide>
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              "Add Ride",
+              myRides != null
+                  ? Translations.of(context).text('edit_ride')
+                  : Translations.of(context).text('add_ride'),
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -151,47 +224,283 @@ class _AddRideState extends State<AddRide>
       ),
     );
     list.add(appBar);
-    if (my_steps.length > 0) {
-      var manufacturerNames = Padding(
-        padding: EdgeInsets.only(top: 56),
-        child: Stepper(
-          key: Key("mysuperkey-" + my_steps.length.toString()),
-          // Using a variable here for handling the currentStep
-          currentStep: this.current_step,
-          // List the steps you would like to have
-          steps: my_steps,
-          // Define the type of Stepper style
-          // StepperType.horizontal :  Horizontal Style
-          // StepperType.vertical   :  Vertical Style
-          type: StepperType.vertical,
-          // Know the step that is tapped
-          onStepTapped: (step) {
-            // On hitting step itself, change the state and jump to that step
-            setState(() {
-              // update the variable handling the current step value
-              // jump to the tapped step
-              current_step = step;
-            });
-            // Log function call
-            print("onStepTapped : " + step.toString());
-          },
-          controlsBuilder: (BuildContext context,
-              {VoidCallback onStepContinue, VoidCallback onStepCancel}) {
-            return Row(
-              children: <Widget>[
-                Container(
-                  child: null,
+    var manufacturer = Padding(
+      padding: EdgeInsets.only(top: 60, left: 10, right: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          FlatButton(
+            padding: EdgeInsets.fromLTRB(10, 0, 10, 4),
+            onPressed: () async {
+              await showModalBottomSheet<int>(
+                  context: context,
+                  builder: (BuildContext builder) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Card(
+                          elevation: 2,
+                          margin: EdgeInsets.all(16.0),
+                          child: CupertinoTextField(
+                            textAlign: TextAlign.left,
+                            style: TextStyle(fontSize: 14.0),
+                            controller: searchController1,
+                            placeholder: 'Enter manufacturer here',
+                            suffix: IconButton(
+                              icon: Icon(
+                                Icons.search,
+                                color: Color(0xFFD52D2D),
+                              ),
+                              onPressed: () {
+//                                controller.animateToItem(index,
+//                                    duration: Duration(microseconds: 20),
+//                                    curve: ElasticInCurve());
+                              },
+//                          onPressed: _showWarning(),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: CupertinoPicker(
+                              squeeze: 1.5,
+                              diameterRatio: 1,
+                              useMagnifier: true,
+                              looping: true,
+                              scrollController: controller1,
+                              itemExtent: 33.0,
+                              backgroundColor: Colors.white,
+                              onSelectedItemChanged: (int index) =>
+                                  setState(() {
+                                    setState(() {
+                                      manufacturerId =
+                                          int.parse(manufacturerList[index].id);
+                                      _manufacturer.text =
+                                          manufacturerList[index].name;
+                                      formData['manufacturer'] =
+                                          manufacturerList[index].name;
+                                    });
+                                  }),
+                              children: new List<Widget>.generate(
+                                  manufacturerList.length, (int index) {
+                                return new Center(
+                                  child: new Text(
+                                    manufacturerList[index].name,
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                );
+                              })),
+                        )
+                      ],
+                    );
+                  }).whenComplete(() {
+                getCarModelList(manufacturerId.toString());
+              });
+            },
+            child: TextFormField(
+              controller: _manufacturer,
+              enabled: false,
+              decoration: new InputDecoration(
+                contentPadding: EdgeInsets.all(15.0),
+                counterStyle: TextStyle(
+                  height: double.minPositive,
                 ),
-                Container(
-                  child: null,
+                counterText: "",
+                labelText: Translations.of(context).text('manufacturer'),
+                fillColor: Colors.white,
+                border: new OutlineInputBorder(
+                  borderRadius: new BorderRadius.circular(5.0),
+                  borderSide: new BorderSide(),
                 ),
-              ],
-            );
-          },
-        ),
-      );
-      list.add(manufacturerNames);
-    }
+                //fillColor: Colors.green
+              ),
+            ),
+          ),
+          FlatButton(
+              padding: EdgeInsets.fromLTRB(10, 5, 10, 4),
+              onPressed: () async {
+                if (manufacturerId != null) {
+                  await showModalBottomSheet<int>(
+                      context: context,
+                      builder: (BuildContext builder) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Card(
+                              elevation: 2,
+                              margin: EdgeInsets.all(16.0),
+                              child: CupertinoTextField(
+                                textAlign: TextAlign.left,
+                                style: TextStyle(fontSize: 14.0),
+                                controller: searchController2,
+                                placeholder: 'Enter model name',
+                                suffix: IconButton(
+                                  icon: Icon(
+                                    Icons.search,
+                                    color: Color(0xFFD52D2D),
+                                  ),
+                                  onPressed: () {},
+//                          onPressed: _showWarning(),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: CupertinoPicker(
+                                  squeeze: 1.5,
+                                  diameterRatio: 1,
+                                  useMagnifier: true,
+                                  scrollController: controller2,
+                                  looping: true,
+                                  itemExtent: 33.0,
+                                  backgroundColor: Colors.white,
+                                  onSelectedItemChanged: (int index) =>
+                                      setState(() {
+                                        _cardmodel.text = modelList[index].name;
+                                        carModelId =
+                                            int.parse(modelList[index].id);
+                                        carModeltype = modelList[index].type;
+                                        formData['model'] =
+                                            modelList[index].name;
+                                      }),
+                                  children: new List<Widget>.generate(
+                                      modelList.length, (int index) {
+                                    return new Center(
+                                      child: new Text(
+                                        modelList[index].name,
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    );
+                                  })),
+                            )
+                          ],
+                        );
+                      });
+                } else {
+                  _displaySnackBar(
+                      Translations.of(context).text('choose_manufacturer'));
+                }
+              },
+              child: TextFormField(
+                controller: _cardmodel,
+                enabled: false,
+                decoration: new InputDecoration(
+                  contentPadding: EdgeInsets.all(15.0),
+                  counterStyle: TextStyle(
+                    height: double.minPositive,
+                  ),
+                  counterText: "",
+                  labelText: Translations.of(context).text('car_model'),
+                  fillColor: Colors.white,
+                  border: new OutlineInputBorder(
+                    borderRadius: new BorderRadius.circular(5.0),
+                    borderSide: new BorderSide(),
+                  ),
+                  //fillColor: Colors.green
+                ),
+              )),
+          FlatButton(
+              padding: EdgeInsets.fromLTRB(10, 5, 10, 4),
+              onPressed: () async {
+                if (carModelId != null) {
+                  await showModalBottomSheet<int>(
+                      context: context,
+                      builder: (BuildContext builder) {
+                        return CupertinoPicker(
+                            squeeze: 1.5,
+                            diameterRatio: 1,
+                            useMagnifier: true,
+                            looping: true,
+                            itemExtent: 33.0,
+                            backgroundColor: Colors.white,
+                            scrollController: FixedExtentScrollController(
+                              initialItem: _selectedYear - 1,
+                            ),
+                            onSelectedItemChanged: (int index) {
+                              setState(() {
+                                _selectedYear = index;
+                                _yearController.text = '${_fromYear + index}';
+                              });
+                            },
+                            children: new List<Widget>.generate(_yearRange,
+                                (int index) {
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 6.0),
+                                child: Text(
+                                  '${_fromYear + index}',
+                                  style: TextStyle(
+                                    color: _selectedYear == index
+                                        ? Colors.white
+                                        : Color(0xff170e50).withOpacity(0.6),
+                                    fontSize: 18.0,
+                                    fontFamily: 'Nunito',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                ),
+                              );
+                            }));
+                      });
+                } else {
+                  _displaySnackBar(
+                      Translations.of(context).text('choose_car_model'));
+                }
+              },
+              child: TextFormField(
+                controller: _yearController,
+                enabled: false,
+                decoration: new InputDecoration(
+                  contentPadding: EdgeInsets.all(15.0),
+                  counterStyle: TextStyle(
+                    height: double.minPositive,
+                  ),
+                  counterText: "",
+                  labelText: Translations.of(context).text('year'),
+                  fillColor: Colors.white,
+                  border: new OutlineInputBorder(
+                    borderRadius: new BorderRadius.circular(5.0),
+                    borderSide: new BorderSide(),
+                  ),
+                  //fillColor: Colors.green
+                ),
+              )),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 20, 8, 20),
+            child: Text(
+              Translations.of(context).text('add_photo'),
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: new ClipRRect(
+                borderRadius: new BorderRadius.circular(8.0),
+                child: Stack(
+                  children: <Widget>[
+                    GestureDetector(
+                      onTap: () => imagePicker.showDialog(context),
+                      child: Container(
+                        height: 200.0,
+                        decoration: new BoxDecoration(
+                          color: const Color(0xff7c94b6),
+                          image: new DecorationImage(
+                            image: new ExactAssetImage(_image != null
+                                ? _image.path
+                                : 'assets/imgs/placeholder.png'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+    list.add(manufacturer);
     var submit = Padding(
       padding: EdgeInsets.fromLTRB(5, 0, 5, 20),
       child: Align(
@@ -217,26 +526,44 @@ class _AddRideState extends State<AddRide>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  "Are you sure you want to add?",
+                                  myRides != null
+                                      ? Translations.of(context)
+                                          .text('want_to_edit_car')
+                                      : Translations.of(context)
+                                          .text('want_to_add_car'),
                                   style: TextStyle(
                                       fontSize: 13, fontFamily: 'Montserrat'),
                                 ),
-                                Container(
-                                  child: new ClipRRect(
-                                      borderRadius:
-                                          new BorderRadius.circular(8.0),
-                                      child: Stack(children: <Widget>[
-                                        Image.file(_image,
-                                            height: 90,
-                                            width: 120,
-                                            fit: BoxFit.cover)
-                                      ])),
-                                ),
+                                _image != null
+                                    ? Container(
+                                        child: new ClipRRect(
+                                            borderRadius:
+                                                new BorderRadius.circular(8.0),
+                                            child: Stack(children: <Widget>[
+                                              Image.file(_image,
+                                                  height: 90,
+                                                  width: 120,
+                                                  fit: BoxFit.cover)
+                                            ])),
+                                      )
+                                    : SizedBox(
+                                        height: 0,
+                                      ),
                                 Text(
                                   formData['manufacturer'] +
                                       "( " +
                                       formData['model'] +
                                       " )",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontFamily: 'Montserrat',
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  Translations.of(context).text('year') +
+                                      " - (" +
+                                      _yearController.text +
+                                      ")",
                                   style: TextStyle(
                                       fontSize: 16,
                                       fontFamily: 'Montserrat',
@@ -284,24 +611,24 @@ class _AddRideState extends State<AddRide>
                                                 minWidth: double.infinity,
                                                 minHeight: 35.0),
                                             child: RaisedButton(
-                                                child: new Text("Add"),
+                                                child: new Text(myRides != null
+                                                    ? Translations.of(context)
+                                                        .text('edit')
+                                                    : Translations.of(context)
+                                                        .text('add')),
                                                 onPressed: () {
                                                   Navigator.of(context,
                                                           rootNavigator: true)
                                                       .pop();
-                                                  addMyRide(
-                                                      modelList[modelList
-                                                              .indexWhere((i) =>
-                                                                  i.name ==
-                                                                  formData[
-                                                                      'model'])]
-                                                          .id,
-                                                      modelList[modelList
-                                                              .indexWhere((i) =>
-                                                                  i.name ==
-                                                                  formData[
-                                                                      'model'])]
-                                                          .type);
+                                                  if (myRides != null) {
+                                                    updateRides(
+                                                        carModelId.toString(),
+                                                        carModeltype);
+                                                  } else {
+                                                    addMyRide(
+                                                        carModelId.toString(),
+                                                        carModeltype);
+                                                  }
                                                 },
                                                 textColor: Colors.white,
                                                 color: Color(0xff170e50),
@@ -327,7 +654,7 @@ class _AddRideState extends State<AddRide>
                     borderRadius: new BorderRadius.circular(30.0)))),
       ),
     );
-    if (current_step == 3 && _image != null) {
+    if (_yearController.text != '') {
       list.add(submit);
     }
     if (_isLoading) {
@@ -357,7 +684,7 @@ class _AddRideState extends State<AddRide>
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -368,6 +695,35 @@ class _AddRideState extends State<AddRide>
     });
     var request =
         new MultipartRequest("POST", Uri.parse(api_url + "user/addToMyRide"));
+    request.fields['car_model_id'] = id;
+    request.fields['type'] = type;
+    request.fields['year'] = _yearController.text;
+    if (_image != null) {
+      request.files.add(await MultipartFile.fromPath('image', _image.path,
+          contentType: new MediaType('image', 'jpeg')));
+    }
+    request.headers['Authorization'] = "Bearer $acccessToken";
+    commonMethod(request).then((onResponse) {
+      onResponse.stream.transform(utf8.decoder).listen((value) {
+        setState(() {
+          _isLoading = false;
+        });
+        Map data = json.decode(value);
+        presentToast(data['message'], context, 0);
+        if (data['code'] == 200) {
+          Navigator.of(context).pop();
+        }
+      });
+    });
+  }
+
+  updateRides(String id, String type) async {
+    setState(() {
+      _isLoading = true;
+    });
+    var request =
+        new MultipartRequest("POST", Uri.parse(api_url + "user/updateMyRide"));
+    request.fields['id'] = myRides.id;
     request.fields['car_model_id'] = id;
     request.fields['type'] = type;
     request.fields['year'] = _yearController.text;
@@ -411,40 +767,14 @@ class _AddRideState extends State<AddRide>
               tempList.add(new ManufacturerList(
                   data['data'][i]['id'].toString(),
                   data['data'][i]['name'],
-                  data['data'][i]['image'],
-                  "",
-                  data['data'][i]['created_at'],
-                  data['data'][i]['updated_at']));
+                  ""));
             }
             setState(() {
               manufacturerList = tempList;
-              createSteps(Step(
-                  // Title of the Step
-                  title: Text("Manufacturer"),
-                  // Content, it can be any widget here. Using basic Text for this example
-                  content: DropDownField(
-                    controller: _manufacturer,
-                    value: formData['manufacturer'],
-                    icon: Icon(Icons.location_city),
-                    required: true,
-                    hintText: 'Choose a manufacturer',
-                    labelText: 'Manufacturer *',
-                    items: manufacturerList,
-                    strict: false,
-                    setter: (dynamic newValue) {
-                      formData['manufacturer'] = newValue.name;
-                    },
-                    onValueChanged: (val) {
-                      formData['manufacturer'] = val;
-                      getCarModelList(manufacturerList[
-                              manufacturerList.indexWhere((i) => i.name == val)]
-                          .id);
-                    },
-                  ),
-                  isActive: true));
+              finalmanufacturerList = tempList;
             });
           } else {
-            presentToast("No record found", context, 0);
+            presentToast(Translations.of(context).text('no_record'), context, 0);
           }
         } else {
           presentToast(data['message'], context, 0);
@@ -457,607 +787,31 @@ class _AddRideState extends State<AddRide>
     setState(() {
       _isLoading = true;
     });
-    var request = new MultipartRequest(
-        "GET", Uri.parse(api_url + "user/getCarModelList/" + id));
-    request.headers['Authorization'] = "Bearer $acccessToken";
-    commonMethod(request).then((onResponse) {
-      onResponse.stream.transform(utf8.decoder).listen((value) {
-        setState(() {
-          _isLoading = false;
-        });
-        Map data = json.decode(value);
-        print(data);
-        presentToast(data['message'], context, 0);
-        if (data['code'] == 200) {
-          if (data['data'].length > 0) {
-            List<ManufacturerList> tempList = new List();
-            for (var i = 0; i < data['data'].length; i++) {
-              tempList.add(new ManufacturerList(
-                  data['data'][i]['id'].toString(),
-                  data['data'][i]['name'],
-                  data['data'][i]['image'],
-                  data['data'][i]['type'],
-                  data['data'][i]['created_at'],
-                  data['data'][i]['updated_at']));
-            }
-            setState(() {
-              modelList = tempList;
-              ismanufactufrer = false;
-              if (my_steps.length == 1) {
-                createSteps(Step(
-                    // Title of the Step
-                    title: Text("Car Model"),
-                    // Content, it can be any widget here. Using basic Text for this example
-                    content: DropDownField(
-                      controller: _cardmodel,
-                      value: formData['model'],
-                      icon: Icon(Icons.location_city),
-                      required: true,
-                      hintText: 'Choose a car model',
-                      labelText: 'Car model *',
-                      items: modelList,
-                      strict: false,
-                      setter: (dynamic newValue) {
-                        formData['model'] = newValue.name;
-                      },
-                      onValueChanged: (val) {
-                        print(val);
-                        formData['model'] = val;
-                        setState(() {
-                          if (my_steps.length == 2) {
-                            createSteps(Step(
-                                // Title of the Step
-                                title: Text("Year"),
-                                // Content, it can be any widget here. Using basic Text for this example
-                                content: TextFormField(
-                                  controller: _yearController,
-                                  style: TextStyle(fontSize: 13.0),
-                                  maxLength: 4,
-                                  decoration: InputDecoration(
-                                      hintStyle: TextStyle(fontSize: 13.0),
-                                      hintText: 'Enter Year',
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 10.0),
-                                      border: OutlineInputBorder(),
-                                      suffixIcon: Icon(Icons.calendar_today)),
-                                  onChanged: (text) {
-                                    var date = new DateTime.now();
-                                    int currentYear = date.year;
-                                    if (text.trim().length > 3 &&
-                                        (int.parse(text.trim()) < 1900 ||
-                                            int.parse(text.trim()) >=
-                                                currentYear)) {
-                                      _displaySnackBar(
-                                          "Year must be between 1900 and $currentYear");
-                                    } else if (text.trim().length == 4) {
-                                      setState(() {
-                                        if (my_steps.length == 3) {
-                                          createSteps(Step(
-                                              // Title of the Step
-                                              title: Text("Add Photo"),
-                                              // Content, it can be any widget here. Using basic Text for this example
-                                              content: Container(
-                                                child: new ClipRRect(
-                                                  borderRadius:
-                                                      new BorderRadius.circular(
-                                                          8.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      GestureDetector(
-                                                        onTap: () => imagePicker
-                                                            .showDialog(
-                                                                context),
-                                                        child: Container(
-                                                          height: 90.0,
-                                                          width: 150.0,
-                                                          decoration:
-                                                              new BoxDecoration(
-                                                            color: const Color(
-                                                                0xff7c94b6),
-                                                            image:
-                                                                new DecorationImage(
-                                                              image: new ExactAssetImage(
-                                                                  'assets/imgs/placeholder.png'),
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                            border: Border.all(
-                                                                color: Color(
-                                                                    0xff170e50),
-                                                                width: 1.0),
-                                                            borderRadius:
-                                                                new BorderRadius
-                                                                        .all(
-                                                                    const Radius
-                                                                            .circular(
-                                                                        10.0)),
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              isActive: true));
-                                        } else {
-                                          my_steps[3] = Step(
-                                              // Title of the Step
-                                              title: Text("Add Photo"),
-                                              // Content, it can be any widget here. Using basic Text for this example
-                                              content: Container(
-                                                child: new ClipRRect(
-                                                  borderRadius:
-                                                      new BorderRadius.circular(
-                                                          8.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      GestureDetector(
-                                                        onTap: () => imagePicker
-                                                            .showDialog(
-                                                                context),
-                                                        child: Container(
-                                                          height: 90.0,
-                                                          width: 150.0,
-                                                          decoration:
-                                                              new BoxDecoration(
-                                                            color: const Color(
-                                                                0xff7c94b6),
-                                                            image:
-                                                                new DecorationImage(
-                                                              image: new ExactAssetImage(
-                                                                  'assets/imgs/placeholder.png'),
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                            border: Border.all(
-                                                                color: Color(
-                                                                    0xff170e50),
-                                                                width: 1.0),
-                                                            borderRadius:
-                                                                new BorderRadius
-                                                                        .all(
-                                                                    const Radius
-                                                                            .circular(
-                                                                        10.0)),
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              isActive: true);
-                                        }
-                                        current_step = current_step + 1;
-                                      });
-                                    }
-                                  },
-                                ),
-                                isActive: true));
-                          } else {
-                            my_steps[2] = Step(
-                                // Title of the Step
-                                title: Text("Year"),
-                                // Content, it can be any widget here. Using basic Text for this example
-                                content: TextFormField(
-                                  controller: _yearController,
-                                  style: TextStyle(fontSize: 13.0),
-                                  maxLength: 4,
-                                  decoration: InputDecoration(
-                                      hintStyle: TextStyle(fontSize: 13.0),
-                                      hintText: 'Enter Year',
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 10.0),
-                                      border: OutlineInputBorder(),
-                                      suffixIcon: Icon(Icons.calendar_today)),
-                                  onChanged: (text) {
-                                    var date = new DateTime.now();
-                                    int currentYear = date.year;
-                                    if (text.trim().length > 3 &&
-                                        (int.parse(text.trim()) < 1900 ||
-                                            int.parse(text.trim()) >=
-                                                currentYear)) {
-                                      _displaySnackBar(
-                                          "Year must be between 1900 and $currentYear");
-                                    } else if (text.trim().length == 4) {
-                                      setState(() {
-                                        if (my_steps.length == 3) {
-                                          createSteps(Step(
-                                              // Title of the Step
-                                              title: Text("Add Photo"),
-                                              // Content, it can be any widget here. Using basic Text for this example
-                                              content: Container(
-                                                child: new ClipRRect(
-                                                  borderRadius:
-                                                      new BorderRadius.circular(
-                                                          8.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      GestureDetector(
-                                                        onTap: () => imagePicker
-                                                            .showDialog(
-                                                                context),
-                                                        child: Container(
-                                                          height: 90.0,
-                                                          width: 150.0,
-                                                          decoration:
-                                                              new BoxDecoration(
-                                                            color: const Color(
-                                                                0xff7c94b6),
-                                                            image:
-                                                                new DecorationImage(
-                                                              image: new ExactAssetImage(
-                                                                  'assets/imgs/placeholder.png'),
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                            border: Border.all(
-                                                                color: Color(
-                                                                    0xff170e50),
-                                                                width: 1.0),
-                                                            borderRadius:
-                                                                new BorderRadius
-                                                                        .all(
-                                                                    const Radius
-                                                                            .circular(
-                                                                        10.0)),
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              isActive: true));
-                                        } else {
-                                          my_steps[3] = Step(
-                                              // Title of the Step
-                                              title: Text("Add Photo"),
-                                              // Content, it can be any widget here. Using basic Text for this example
-                                              content: Container(
-                                                child: new ClipRRect(
-                                                  borderRadius:
-                                                      new BorderRadius.circular(
-                                                          8.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      GestureDetector(
-                                                        onTap: () => imagePicker
-                                                            .showDialog(
-                                                                context),
-                                                        child: Container(
-                                                          height: 90.0,
-                                                          width: 150.0,
-                                                          decoration:
-                                                              new BoxDecoration(
-                                                            color: const Color(
-                                                                0xff7c94b6),
-                                                            image:
-                                                                new DecorationImage(
-                                                              image: new ExactAssetImage(
-                                                                  'assets/imgs/placeholder.png'),
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                            border: Border.all(
-                                                                color: Color(
-                                                                    0xff170e50),
-                                                                width: 1.0),
-                                                            borderRadius:
-                                                                new BorderRadius
-                                                                        .all(
-                                                                    const Radius
-                                                                            .circular(
-                                                                        10.0)),
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              isActive: true);
-                                        }
-                                        current_step = current_step + 1;
-                                      });
-                                    }
-                                  },
-                                ),
-                                isActive: true);
-                          }
-                          current_step = current_step + 1;
-                        });
-                      },
-                    ),
-                    isActive: true));
-              } else {
-                my_steps[1] = Step(
-                    // Title of the Step
-                    title: Text("Car Model"),
-                    // Content, it can be any widget here. Using basic Text for this example
-                    content: DropDownField(
-                      controller: _cardmodel,
-                      value: formData['model'],
-                      icon: Icon(Icons.location_city),
-                      required: true,
-                      hintText: 'Choose a car model',
-                      labelText: 'Car model *',
-                      items: modelList,
-                      strict: false,
-                      setter: (dynamic newValue) {
-                        formData['model'] = newValue.name;
-                      },
-                      onValueChanged: (val) {
-                        print(val);
-                        formData['model'] = val;
-                        setState(() {
-                          if (my_steps.length == 2) {
-                            createSteps(Step(
-                                // Title of the Step
-                                title: Text("Year"),
-                                // Content, it can be any widget here. Using basic Text for this example
-                                content: TextFormField(
-                                  controller: _yearController,
-                                  style: TextStyle(fontSize: 13.0),
-                                  maxLength: 4,
-                                  decoration: InputDecoration(
-                                      hintStyle: TextStyle(fontSize: 13.0),
-                                      hintText: 'Enter Year',
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 10.0),
-                                      border: OutlineInputBorder(),
-                                      suffixIcon: Icon(Icons.calendar_today)),
-                                  onChanged: (text) {
-                                    var date = new DateTime.now();
-                                    int currentYear = date.year;
-                                    if (text.trim().length > 3 &&
-                                        (int.parse(text.trim()) < 1900 ||
-                                            int.parse(text.trim()) >=
-                                                currentYear)) {
-                                      _displaySnackBar(
-                                          "Year must be between 1900 and $currentYear");
-                                    } else if (text.trim().length == 4) {
-                                      setState(() {
-                                        if (my_steps.length == 3) {
-                                          createSteps(Step(
-                                              // Title of the Step
-                                              title: Text("Add Photo"),
-                                              // Content, it can be any widget here. Using basic Text for this example
-                                              content: Container(
-                                                child: new ClipRRect(
-                                                  borderRadius:
-                                                      new BorderRadius.circular(
-                                                          8.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      GestureDetector(
-                                                        onTap: () => imagePicker
-                                                            .showDialog(
-                                                                context),
-                                                        child: Container(
-                                                          height: 90.0,
-                                                          width: 150.0,
-                                                          decoration:
-                                                              new BoxDecoration(
-                                                            color: const Color(
-                                                                0xff7c94b6),
-                                                            image:
-                                                                new DecorationImage(
-                                                              image: new ExactAssetImage(
-                                                                  'assets/imgs/placeholder.png'),
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                            border: Border.all(
-                                                                color: Color(
-                                                                    0xff170e50),
-                                                                width: 1.0),
-                                                            borderRadius:
-                                                                new BorderRadius
-                                                                        .all(
-                                                                    const Radius
-                                                                            .circular(
-                                                                        10.0)),
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              isActive: true));
-                                        } else {
-                                          my_steps[3] = Step(
-                                              // Title of the Step
-                                              title: Text("Add Photo"),
-                                              // Content, it can be any widget here. Using basic Text for this example
-                                              content: Container(
-                                                child: new ClipRRect(
-                                                  borderRadius:
-                                                      new BorderRadius.circular(
-                                                          8.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      GestureDetector(
-                                                        onTap: () => imagePicker
-                                                            .showDialog(
-                                                                context),
-                                                        child: Container(
-                                                          height: 90.0,
-                                                          width: 150.0,
-                                                          decoration:
-                                                              new BoxDecoration(
-                                                            color: const Color(
-                                                                0xff7c94b6),
-                                                            image:
-                                                                new DecorationImage(
-                                                              image: new ExactAssetImage(
-                                                                  'assets/imgs/placeholder.png'),
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                            border: Border.all(
-                                                                color: Color(
-                                                                    0xff170e50),
-                                                                width: 1.0),
-                                                            borderRadius:
-                                                                new BorderRadius
-                                                                        .all(
-                                                                    const Radius
-                                                                            .circular(
-                                                                        10.0)),
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              isActive: true);
-                                        }
-                                        current_step = current_step + 1;
-                                      });
-                                    }
-                                  },
-                                ),
-                                isActive: true));
-                          } else {
-                            my_steps[2] = Step(
-                                // Title of the Step
-                                title: Text("Year"),
-                                // Content, it can be any widget here. Using basic Text for this example
-                                content: TextFormField(
-                                  controller: _yearController,
-                                  style: TextStyle(fontSize: 13.0),
-                                  maxLength: 4,
-                                  decoration: InputDecoration(
-                                      hintStyle: TextStyle(fontSize: 13.0),
-                                      hintText: 'Enter Year',
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 10.0),
-                                      border: OutlineInputBorder(),
-                                      suffixIcon: Icon(Icons.calendar_today)),
-                                  onChanged: (text) {
-                                    var date = new DateTime.now();
-                                    int currentYear = date.year;
-                                    if (text.trim().length > 3 &&
-                                        (int.parse(text.trim()) < 1900 ||
-                                            int.parse(text.trim()) >=
-                                                currentYear)) {
-                                      _displaySnackBar(
-                                          "Year must be between 1900 and $currentYear");
-                                    } else if (text.trim().length == 4) {
-                                      setState(() {
-                                        if (my_steps.length == 3) {
-                                          createSteps(Step(
-                                              // Title of the Step
-                                              title: Text("Add Photo"),
-                                              // Content, it can be any widget here. Using basic Text for this example
-                                              content: Container(
-                                                child: new ClipRRect(
-                                                  borderRadius:
-                                                      new BorderRadius.circular(
-                                                          8.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      GestureDetector(
-                                                        onTap: () => imagePicker
-                                                            .showDialog(
-                                                                context),
-                                                        child: Container(
-                                                          height: 90.0,
-                                                          width: 150.0,
-                                                          decoration:
-                                                              new BoxDecoration(
-                                                            color: const Color(
-                                                                0xff7c94b6),
-                                                            image:
-                                                                new DecorationImage(
-                                                              image: new ExactAssetImage(
-                                                                  'assets/imgs/placeholder.png'),
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                            border: Border.all(
-                                                                color: Color(
-                                                                    0xff170e50),
-                                                                width: 1.0),
-                                                            borderRadius:
-                                                                new BorderRadius
-                                                                        .all(
-                                                                    const Radius
-                                                                            .circular(
-                                                                        10.0)),
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              isActive: true));
-                                        } else {
-                                          my_steps[3] = Step(
-                                              // Title of the Step
-                                              title: Text("Add Photo"),
-                                              // Content, it can be any widget here. Using basic Text for this example
-                                              content: Container(
-                                                child: new ClipRRect(
-                                                  borderRadius:
-                                                      new BorderRadius.circular(
-                                                          8.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      GestureDetector(
-                                                        onTap: () => imagePicker
-                                                            .showDialog(
-                                                                context),
-                                                        child: Container(
-                                                          height: 90.0,
-                                                          width: 150.0,
-                                                          decoration:
-                                                              new BoxDecoration(
-                                                            color: const Color(
-                                                                0xff7c94b6),
-                                                            image:
-                                                                new DecorationImage(
-                                                              image: new ExactAssetImage(
-                                                                  'assets/imgs/placeholder.png'),
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                            border: Border.all(
-                                                                color: Color(
-                                                                    0xff170e50),
-                                                                width: 1.0),
-                                                            borderRadius:
-                                                                new BorderRadius
-                                                                        .all(
-                                                                    const Radius
-                                                                            .circular(
-                                                                        10.0)),
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              isActive: true);
-                                        }
-                                        current_step = current_step + 1;
-                                      });
-                                    }
-                                  },
-                                ),
-                                isActive: true);
-                          }
-                          current_step = current_step + 1;
-                        });
-                      },
-                    ),
-                    isActive: true);
-              }
-              current_step = current_step + 1;
-            });
-          } else {
-            presentToast("No record found", context, 0);
+    get(api_url + "user/getCarModelList/" + id, headers: {
+      HttpHeaders.contentTypeHeader: 'application/json',
+      'Authorization': "Bearer $acccessToken"
+    }).then((response) {
+      Map data = json.decode(response.body);
+      presentToast(data['message'], context, 0);
+      if (data['code'] == 200) {
+        if (data['data'].length > 0) {
+          List<ManufacturerList> tempList = new List();
+          for (var i = 0; i < data['data'].length; i++) {
+            tempList.add(new ManufacturerList(data['data'][i]['id'].toString(),
+                data['data'][i]['name'], data['data'][i]['type']));
           }
+          setState(() {
+            modelList = tempList;
+            finalmodelList = tempList;
+          });
         } else {
-          presentToast(data['message'], context, 0);
+          presentToast(Translations.of(context).text("no_record"), context, 0);
         }
+      } else {
+        presentToast(data['message'], context, 0);
+      }
+      setState(() {
+        _isLoading = false;
       });
     });
   }
@@ -1067,7 +821,7 @@ class _AddRideState extends State<AddRide>
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -1076,7 +830,7 @@ class _AddRideState extends State<AddRide>
     _scaffoldKey.currentState.showSnackBar(snackBar);
   }
 
-  void createSteps(Step step) {
-    my_steps.add(step);
-  }
+//  void createSteps(Step step) {
+//    my_steps.add(step);
+//  }
 }

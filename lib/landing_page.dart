@@ -31,6 +31,7 @@ import 'package:eleve11/widgets/custom_radio.dart';
 import 'package:eleve11/promo_codes.dart';
 import 'package:eleve11/widgets/searchMapPlaceWidget.dart';
 import 'package:eleve11/widgets/user_accounts_drawer_header.dart' as prefix1;
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -78,6 +79,7 @@ class _LandingPage extends State<LandingPage> {
     zoom: 14.4746,
   );
   BitmapDescriptor myIcon;
+  BitmapDescriptor workerIcon;
   LatLng _originLocation = LatLng(0, 0);
   LatLng _destinationLocation = LatLng(0, 0);
   RadioBuilder<String, dynamic> dynamicBuilder;
@@ -94,7 +96,8 @@ class _LandingPage extends State<LandingPage> {
   String locationTitle = "";
   bool isdragged = false;
   Map userData = null;
-
+  static final databaseReference = FirebaseDatabase.instance.reference();
+  StreamSubscription subscription;
   String selectedServiceCat = "";
 
   Future _getLocation() async {
@@ -128,7 +131,28 @@ class _LandingPage extends State<LandingPage> {
 
     loadlabel("assets/imgs/map_user.png");
     load("assets/imgs/gps.png");
+    subscription = FirebaseDatabase.instance
+        .reference()
+        .child("workers")
+        .onValue
+        .listen((event) async {
+      for (var i = 1; i < event.snapshot.value.length; i++) {
+        markers.add(Marker(
+          markerId: MarkerId("worker_location"),
+          icon: BitmapDescriptor.fromBytes(
+              await getBytesFromAsset('assets/technician.png', 100)),
+          position: LatLng(event.snapshot.value[i]['latitude'],
+              event.snapshot.value[i]['longitude']),
+        ));
+      }
+    });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    subscription.cancel();
+    super.dispose();
   }
 
   Future<Null> checkIsLogin() async {
@@ -460,7 +484,7 @@ class _LandingPage extends State<LandingPage> {
                         color: Color(0xff170e50),
                       ),
                       title: new Text(
-                          Translations.of(context).text('about') + ' Eleve11'),
+                          Translations.of(context).text('about') + ' Eleven'),
                       onTap: () => _onListTileTap(context, "about"),
                     ),
                     new ListTile(
@@ -468,9 +492,10 @@ class _LandingPage extends State<LandingPage> {
                       contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
                       leading: new Icon(Icons.new_releases,
                           color: Color(0xff170e50)),
-                      title: new Text("App version"),
+                      title: new Text(
+                          Translations.of(context).text('app_version')),
                       trailing: new Text(
-                        "v1.0.1",
+                        "v1.0.2",
                         style: TextStyle(
                             fontSize: 11,
                             fontFamily: 'Montserrat',
@@ -519,14 +544,19 @@ class _LandingPage extends State<LandingPage> {
                 ],
               ));
     } else if (from == "feedback") {
-      Navigator.push(context,
-          new MaterialPageRoute(builder: (context) => new FeedbackDynamic()));
+      Navigator.push(
+          context,
+          new MaterialPageRoute(
+              builder: (context) => new CheckOrderHistory("Feedback")));
     } else if (from == "profile") {
       Navigator.push(context,
           new MaterialPageRoute(builder: (context) => new ProfilePageDesign()));
     } else if (from == "my_order") {
-      Navigator.push(context,
-          new MaterialPageRoute(builder: (context) => new CheckOrderHistory()));
+      Navigator.push(
+          context,
+          new MaterialPageRoute(
+              builder: (context) =>
+                  new CheckOrderHistory("Check Order History")));
     } else if (from == "offers") {
       Navigator.push(context,
           new MaterialPageRoute(builder: (context) => new OffersPage()));
@@ -561,7 +591,7 @@ class _LandingPage extends State<LandingPage> {
           title: const Text('Not Implemented'),
           actions: <Widget>[
             new FlatButton(
-              child: const Text('OK'),
+              child: Text(Translations.of(context).text('ok')),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -575,8 +605,11 @@ class _LandingPage extends State<LandingPage> {
   Future<Null> clearPreference(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('token', '');
-    prefs.setString('accessToken', '');
-    prefs.setString('userData', '');
+    if (prefs.getString('bio') != 'enable') {
+      prefs.setString('accessToken', '');
+      prefs.setString('userData', '');
+      prefs.setString('bio', '');
+    }
     Navigator.pushAndRemoveUntil(
       context,
       new MaterialPageRoute(builder: (context) => new LoginPage()),
@@ -651,14 +684,84 @@ class _LandingPage extends State<LandingPage> {
                                                       ),
                                                 Expanded(
                                                   child: Center(
-                                                    child: Text(
-                                                      i.name!=null?i.name:'No name',
-                                                      style: TextStyle(
-                                                          fontSize: 13,
-                                                          fontFamily:
-                                                              'Montserrat',
-                                                          fontWeight:
-                                                              FontWeight.bold),
+                                                    child: GestureDetector(
+                                                      onTap: () {
+                                                        if (markers.length >
+                                                            0) {
+                                                          markers.remove(markers
+                                                              .firstWhere((Marker
+                                                                      marker) =>
+                                                                  marker
+                                                                      .markerId ==
+                                                                  MarkerId(
+                                                                      "currentLocation")));
+                                                        }
+                                                        setState(() {
+                                                          address_id = i.id;
+                                                        });
+                                                        markers.add(Marker(
+                                                          markerId: MarkerId(
+                                                              "currentLocation"),
+                                                          icon: myIcon,
+                                                          position: new LatLng(
+                                                              double.parse(
+                                                                  i.lat),
+                                                              double.parse(
+                                                                  i.lon)),
+                                                          draggable: true,
+                                                          onDragEnd: ((value) {
+                                                            setState(() {
+                                                              isdragged = true;
+                                                            });
+                                                            getLocationAddress(
+                                                                value.latitude,
+                                                                value
+                                                                    .longitude);
+                                                            _UpdateCurrentLocation(
+                                                                CameraPosition(
+                                                              target: LatLng(
+                                                                  value
+                                                                      .latitude,
+                                                                  value
+                                                                      .longitude),
+                                                              zoom: 14.4746,
+                                                            ));
+                                                          }),
+                                                          onTap: () => _onTap(
+                                                              new LatLng(
+                                                                  double.parse(
+                                                                      i.lat),
+                                                                  double.parse(
+                                                                      i.lon))),
+                                                        ));
+                                                        setState(() {
+                                                          markers = markers;
+                                                        });
+                                                        _UpdateCurrentLocation(
+                                                            CameraPosition(
+                                                          target: LatLng(
+                                                              double.parse(
+                                                                  i.lat),
+                                                              double.parse(
+                                                                  i.lon)),
+                                                          zoom: 14.4746,
+                                                        ));
+                                                      },
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child: Text(
+                                                          i.name,
+                                                          style: TextStyle(
+                                                              fontSize: 13,
+                                                              fontFamily:
+                                                                  'Montserrat',
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -695,7 +798,7 @@ class _LandingPage extends State<LandingPage> {
                                           onPressed: () {},
                                         ),
                                         Text(
-                                          locationTitle,
+                                          "Loading ...",
                                           style: TextStyle(
                                               fontSize: 13,
                                               fontFamily: 'Montserrat',
@@ -795,8 +898,8 @@ class _LandingPage extends State<LandingPage> {
                               constraints: const BoxConstraints(
                                   minWidth: double.infinity, minHeight: 35.0),
                               child: RaisedButton(
-                                  child: new Text(
-                                      Translations.of(context).text('confirm')),
+                                  child: new Text(Translations.of(context)
+                                      .text('order_now')),
                                   onPressed: () {
                                     if (selectedServiceCat != '') {
                                       setState(() {
@@ -847,7 +950,7 @@ class _LandingPage extends State<LandingPage> {
                               },
                             ),
                             Text(
-                              "MY RIDES",
+                              Translations.of(context).text('my_rides'),
                               style: TextStyle(
                                   fontSize: 13,
                                   fontFamily: 'Montserrat',
@@ -902,7 +1005,8 @@ class _LandingPage extends State<LandingPage> {
                                                           context,
                                                           new MaterialPageRoute(
                                                               builder: (context) =>
-                                                                  new AddRide())).then(
+                                                                  new AddRide(
+                                                                      null))).then(
                                                           (onVal) {
                                                         getMyRides();
                                                       });
@@ -924,7 +1028,10 @@ class _LandingPage extends State<LandingPage> {
                                                                   const EdgeInsets
                                                                       .all(8.0),
                                                               child: Text(
-                                                                  "Add New"),
+                                                                  Translations.of(
+                                                                          context)
+                                                                      .text(
+                                                                          'add_new')),
                                                             )
                                                           ]),
                                                     ),
@@ -972,7 +1079,7 @@ class _LandingPage extends State<LandingPage> {
             final geolocation = await place.geolocation;
             if (markers.length > 0) {
               markers.remove(markers.firstWhere((Marker marker) =>
-              marker.markerId == MarkerId("currentLocation")));
+                  marker.markerId == MarkerId("currentLocation")));
             }
             markers.add(Marker(
               markerId: MarkerId("currentLocation"),
@@ -989,8 +1096,7 @@ class _LandingPage extends State<LandingPage> {
                   zoom: 14.4746,
                 ));
               }),
-              onTap: () => _onTap(
-                  geolocation.coordinates),
+              onTap: () => _onTap(geolocation.coordinates),
             ));
             _UpdateCurrentLocation(CameraPosition(
               target: geolocation.coordinates,
@@ -1030,6 +1136,8 @@ class _LandingPage extends State<LandingPage> {
     setState(() {
       locationTitle = first.subLocality;
     });
+    locations.insert(0,
+        new Locations("", "", "Current Location", "", "", "", "", "", "", ""));
     print(isdragged);
   }
 
@@ -1040,7 +1148,7 @@ class _LandingPage extends State<LandingPage> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -1055,8 +1163,9 @@ class _LandingPage extends State<LandingPage> {
 
         getLocationAddress(currentLocation.latitude, currentLocation.longitude);
         if (markers.length > 0) {
-          markers.remove(markers.firstWhere((Marker marker) =>
-              marker.markerId == MarkerId("currentLocation")));
+          markers.remove(markers.firstWhere(
+              (Marker marker) => marker.markerId == MarkerId("currentLocation"),
+              orElse: () => null));
         }
         markers.add(Marker(
           markerId: MarkerId("currentLocation"),
@@ -1078,9 +1187,6 @@ class _LandingPage extends State<LandingPage> {
         ));
         setState(() {
           currentLocations = currentLocation;
-          _originLocation =
-              LatLng(currentLocation.latitude, currentLocation.longitude);
-          _destinationLocation = LatLng(20.2921956, 85.8392707);
           _isLoading = false;
         });
       });
@@ -1181,7 +1287,9 @@ class _LandingPage extends State<LandingPage> {
             }
             setState(() {
               locations = tempList;
-              address_id = locations[0].id;
+//              if(locations.length>0){
+//                address_id = locations[0].id;
+//              }
               _current = 0;
             });
           }
@@ -1230,6 +1338,9 @@ class _LandingPage extends State<LandingPage> {
   Future setIcons() async {
     myIcon = BitmapDescriptor.fromBytes(
         await getBytesFromAsset('assets/imgs/gps.png', 100));
+
+    workerIcon = BitmapDescriptor.fromBytes(
+        await getBytesFromAsset('assets/technician.png', 100));
   }
 
   _buildItem(BuildContext context, Rides myRid) {
@@ -1241,12 +1352,14 @@ class _LandingPage extends State<LandingPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Container(
+            height: 120,
             child: new ClipRRect(
               borderRadius: new BorderRadius.circular(8.0),
               child: Stack(
                 children: <Widget>[
                   GestureDetector(
                     onTap: () {
+//                      if (address_id != '') {
                       Navigator.push(
                           context,
                           new MaterialPageRoute(
@@ -1256,13 +1369,14 @@ class _LandingPage extends State<LandingPage> {
                                   address_id,
                                   currentLocations.latitude,
                                   currentLocations.longitude)));
+//                      } else {
+//                        _displaySnackBar(
+//                            Translations.of(context).text('no_location'));
+//                      }
                     },
                     child: FadeInImage.assetNetwork(
                       placeholder: 'assets/imgs/placeholder.png',
                       image: myRid.image,
-                      height: 120,
-                      width: 120,
-                      fit: BoxFit.cover,
                     ),
                   ),
                   Positioned(
@@ -1299,7 +1413,7 @@ class _LandingPage extends State<LandingPage> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },

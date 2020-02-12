@@ -31,12 +31,15 @@ class _AddLocationState extends State<AddLocation> {
   BitmapDescriptor myIcon;
   bool _isLoading = true;
 
+  String cityName = "";
   String locationTitle = "";
   String lattitude = "";
   String longitude = "";
   String fulladdress = "";
+  String erbil = 'Erbil';
   String acccessToken = "";
 
+  TextEditingController _namecontroller = new TextEditingController();
   TextEditingController _address1controller = new TextEditingController();
   TextEditingController _address2controller = new TextEditingController();
   Map userData = null;
@@ -81,7 +84,7 @@ class _AddLocationState extends State<AddLocation> {
     location.getLocation().then((LocationData currentlocation) {
       if (markers.length > 0) {
         markers.remove(markers.firstWhere(
-            (Marker marker) => marker.markerId == MarkerId("currentLocation")));
+                (Marker marker) => marker.markerId == MarkerId("currentLocation")));
       }
       setState(() {
         markers.add(Marker(
@@ -89,7 +92,7 @@ class _AddLocationState extends State<AddLocation> {
             icon: myIcon,
             draggable: true,
             position:
-                LatLng(currentlocation.latitude, currentlocation.longitude),
+            LatLng(currentlocation.latitude, currentlocation.longitude),
             onDragEnd: ((value) {
               getLocationAddress(value.latitude, value.longitude);
             })));
@@ -166,7 +169,7 @@ class _AddLocationState extends State<AddLocation> {
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   padding: EdgeInsets.all(5),
                   elevation: 0,
-                  child: Text("CHANGE",
+                  child: Text(Translations.of(context).text('change'),
                       style: TextStyle(
                           fontSize: 11,
                           color: Colors.deepOrange,
@@ -188,6 +191,23 @@ class _AddLocationState extends State<AddLocation> {
           Padding(
             padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 20),
             child: TextField(
+              controller: _namecontroller,
+              style: TextStyle(fontSize: 13.0),
+              decoration: new InputDecoration(
+                counterStyle: TextStyle(
+                  height: double.minPositive,
+                ),
+                counterText: "",
+                labelText: Translations.of(context).text('location_name'),
+                hintStyle: TextStyle(fontSize: 13),
+                fillColor: Colors.white,
+                //fillColor: Colors.green
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 20),
+            child: TextField(
               controller: _address1controller,
               style: TextStyle(fontSize: 13.0),
               decoration: new InputDecoration(
@@ -195,7 +215,7 @@ class _AddLocationState extends State<AddLocation> {
                   height: double.minPositive,
                 ),
                 counterText: "",
-                labelText: "HOUSE/FLAT/BLOCK NO.",
+                labelText: Translations.of(context).text('house_flat'),
                 hintStyle: TextStyle(fontSize: 13),
                 fillColor: Colors.white,
                 //fillColor: Colors.green
@@ -212,7 +232,7 @@ class _AddLocationState extends State<AddLocation> {
                   height: double.minPositive,
                 ),
                 counterText: "",
-                labelText: "LANDMARK",
+                labelText: Translations.of(context).text('landmark'),
                 hintStyle: TextStyle(fontSize: 13),
                 fillColor: Colors.white,
                 //fillColor: Colors.green
@@ -227,10 +247,16 @@ class _AddLocationState extends State<AddLocation> {
                 child: RaisedButton(
                     child: new Text(Translations.of(context).text('confirm')),
                     onPressed: () {
-                      if (_address1controller.text != '') {
-                        addMyLocation();
+                      if (fulladdress.toLowerCase().contains(erbil.toLowerCase())) {
+                        if (_address1controller.text != '') {
+                          addMyLocation();
+                        } else {
+                          _displaySnackBar(Translations.of(context)
+                              .text('enter_house_flat'));
+                        }
                       } else {
-                        _displaySnackBar('Enter House/Flat/Block No.');
+                        _displaySnackBar(Translations.of(context)
+                            .text('the_service_not_available'));
                       }
                     },
                     textColor: Colors.white,
@@ -269,7 +295,7 @@ class _AddLocationState extends State<AddLocation> {
         child: Image.asset("assets/imgs/logo.png"),
       ),
       decoration: new BoxDecoration(
-          color: Color(0xff170e50),
+          color: Color(0xffffffff),
           borderRadius: new BorderRadius.circular(5.0)),
     );
   }
@@ -279,7 +305,7 @@ class _AddLocationState extends State<AddLocation> {
       content: Text(msg),
       backgroundColor: Colors.black,
       action: SnackBarAction(
-        label: 'OK',
+        label: Translations.of(context).text('ok'),
         onPressed: () {
           // Some code to undo the change!
         },
@@ -314,7 +340,7 @@ class _AddLocationState extends State<AddLocation> {
     request.fields['address'] = fulladdress != null ? fulladdress : '';
     request.fields['landmark'] = _address2controller.text;
     request.fields['house'] = _address1controller.text;
-    request.fields['name'] = locationTitle != null ? locationTitle : '';
+    request.fields['name'] = _namecontroller.text;
     request.headers['Authorization'] = "Bearer $acccessToken";
     commonMethod(request).then((onResponse) {
       onResponse.stream.transform(utf8.decoder).listen((value) {
@@ -338,7 +364,9 @@ class _AddLocationState extends State<AddLocation> {
     setState(() {
       lattitude = latitude.toString();
       longitude = long.toString();
+      cityName = first.subLocality;
       locationTitle = first.subLocality;
+      _namecontroller.text = locationTitle != null ? locationTitle : '';
       fulladdress = first.addressLine;
       _isLoading = false;
     });
