@@ -62,7 +62,7 @@ dev_dependencies:
     sdk: flutter
 
 flutter_icons:
-  image_path: "assets/imgs/loader_car.png"
+  image_path: "assets/imgs/logonew.jpeg"
   android: true
   ios: true
 

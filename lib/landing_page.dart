@@ -267,7 +267,7 @@ class _LandingPage extends State<LandingPage> {
 
   Future<void> _UpdateCurrentLocation(CameraPosition cameraPosition) async {
     final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    controller.moveCamera(CameraUpdate.newCameraPosition(cameraPosition));
   }
 
   @override
