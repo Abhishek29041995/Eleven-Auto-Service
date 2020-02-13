@@ -143,14 +143,12 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(left: 15),
-                                child: Text(
-                                    orderList.address['house'] +
-                                        ",\nnear " +
-                                        orderList.address['landmark'],
+                                child: true ? Text(
+                                    "",
                                     style: TextStyle(
                                         fontSize: 12,
                                         fontFamily: 'Montserrat',
-                                        fontWeight: FontWeight.bold)),
+                                        fontWeight: FontWeight.bold)) : "",
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(left: 15),
@@ -163,11 +161,11 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                                   MaterialTapTargetSize.shrinkWrap,
                                   elevation: 0,
                                   label: Flexible(
-                                    child: Text(orderList.address['address'],
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            fontFamily: 'Montserrat',
-                                            fontWeight: FontWeight.bold)),
+                                    child: Column(
+                                      children: <Widget>[
+                                        if (orderList?.address != null) Text(orderList?.address['address']) else Text("NA"),
+                                      ],
+                                    ),
                                   ),
                                   onPressed: () {},
                                 ),

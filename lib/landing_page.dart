@@ -62,7 +62,7 @@ class _LandingPage extends State<LandingPage> {
   LocationData currentLocations;
   static final CameraPosition _kLake = CameraPosition(
       bearing: 192.8334901395799,
-      target: LatLng(37.43296265331129, -122.08832357078792),
+      target: LatLng(36.3660529,43.0820147),
       tilt: 59.440717697143555,
       zoom: 19.151926040649414);
   static LatLng _initialPosition;
@@ -85,6 +85,8 @@ class _LandingPage extends State<LandingPage> {
   RadioBuilder<String, dynamic> dynamicBuilder;
   double _panelHeightOpen = 0;
   double _panelHeightClosed = 15.0;
+  double currentlat =0.0;
+  double currentlon =0.0;
   final double _initFabHeight = 120.0;
   double _fabHeight;
   bool showfooter = true;
@@ -254,18 +256,18 @@ class _LandingPage extends State<LandingPage> {
   void paintImage(
       ui.Image image, Rect outputRect, Canvas canvas, Paint paint, BoxFit fit) {
     final Size imageSize =
-        Size(image.width.toDouble(), image.height.toDouble());
+    Size(image.width.toDouble(), image.height.toDouble());
     final FittedSizes sizes = applyBoxFit(fit, imageSize, outputRect.size);
     final Rect inputSubrect =
-        Alignment.center.inscribe(sizes.source, Offset.zero & imageSize);
+    Alignment.center.inscribe(sizes.source, Offset.zero & imageSize);
     final Rect outputSubrect =
-        Alignment.center.inscribe(sizes.destination, outputRect);
+    Alignment.center.inscribe(sizes.destination, outputRect);
     canvas.drawImageRect(image, inputSubrect, outputSubrect, paint);
   }
 
   Future<void> _UpdateCurrentLocation(CameraPosition cameraPosition) async {
     final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    controller.moveCamera(CameraUpdate.newCameraPosition(cameraPosition));
   }
 
   @override
@@ -277,127 +279,127 @@ class _LandingPage extends State<LandingPage> {
         drawer: Drawer(
           child: userData != null
               ? ListView(
-                  children: <Widget>[
-                    prefix1.UserAccountsDrawerHeader(
-                      accountName: Text(
-                        userData['name'],
-                        style:
-                            TextStyle(fontSize: 11, color: Color(0xff170e50)),
-                      ),
-                      accountEmail: Text(
-                        userData['email'],
-                        style:
-                            TextStyle(fontSize: 11, color: Color(0xff170e50)),
-                      ),
-                      currentAccountPicture: CircleAvatar(
-                        backgroundColor:
-                            Theme.of(context).platform == TargetPlatform.iOS
-                                ? Colors.blue
-                                : Colors.white,
-                        child: new ClipRRect(
-                          borderRadius: new BorderRadius.circular(100),
-                          child: Stack(
-                            children: <Widget>[
-                              GestureDetector(
-                                onTap: () {
+            children: <Widget>[
+              prefix1.UserAccountsDrawerHeader(
+                accountName: Text(
+                  userData['name'],
+                  style:
+                  TextStyle(fontSize: 11, color: Color(0xff170e50)),
+                ),
+                accountEmail: Text(
+                  userData['email'],
+                  style:
+                  TextStyle(fontSize: 11, color: Color(0xff170e50)),
+                ),
+                currentAccountPicture: CircleAvatar(
+                  backgroundColor:
+                  Theme.of(context).platform == TargetPlatform.iOS
+                      ? Colors.blue
+                      : Colors.white,
+                  child: new ClipRRect(
+                    borderRadius: new BorderRadius.circular(100),
+                    child: Stack(
+                      children: <Widget>[
+                        GestureDetector(
+                          onTap: () {
 //                                Navigator.push(
 //                                    context,
 //                                    new MaterialPageRoute(
 //                                        builder: (context) => new SelectService()));
-                                },
-                                child: FadeInImage.assetNetwork(
-                                  placeholder: 'assets/imgs/user.png',
-                                  image: userData['avatar'],
-                                  fit: BoxFit.cover,
-                                  height: 70,
-                                  width: 70,
-                                ),
-                              ),
-                            ],
+                          },
+                          child: FadeInImage.assetNetwork(
+                            placeholder: 'assets/imgs/user.png',
+                            image: userData['avatar'],
+                            fit: BoxFit.cover,
+                            height: 70,
+                            width: 70,
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(Icons.account_circle,
-                          color: Color(0xff170e50)),
-                      title: new Text(Translations.of(context).text('profile')),
-                      onTap: () => _onListTileTap(context, "profile"),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading:
-                          new Icon(Icons.drive_eta, color: Color(0xff170e50)),
-                      title:
-                          new Text(Translations.of(context).text('my_rides')),
-                      onTap: () => _onListTileTap(context, "my_rides"),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading:
-                          new Icon(Icons.my_location, color: Color(0xff170e50)),
-                      title: new Text(
-                          Translations.of(context).text('my_locations')),
-                      onTap: () => _onListTileTap(context, "mylocation"),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(Icons.favorite_border,
-                          color: Color(0xff170e50)),
-                      title:
-                          new Text(Translations.of(context).text('my_orders')),
-                      onTap: () => _onListTileTap(context, "my_order"),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading:
-                          new Icon(Icons.feedback, color: Color(0xff170e50)),
-                      title:
-                          new Text(Translations.of(context).text('feedback')),
-                      onTap: () => _onListTileTap(context, "feedback"),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(Icons.confirmation_number,
-                          color: Color(0xff170e50)),
-                      title: new Text(
-                          Translations.of(context).text('promo_codes')),
-                      onTap: () => _onListTileTap(context, "promo"),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(Icons.subscriptions,
-                          color: Color(0xff170e50)),
-                      title: new Text(
-                          Translations.of(context).text('subscription')),
-                      onTap: () => _onListTileTap(context, "subscription"),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading:
-                          new Icon(Icons.local_offer, color: Color(0xff170e50)),
-                      title: new Text(Translations.of(context).text('offers')),
-                      onTap: () => _onListTileTap(context, "offers"),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(Icons.notifications,
-                          color: Color(0xff170e50)),
-                      title: new Text(
-                          Translations.of(context).text('notifications')),
-                      onTap: () => _onListTileTap(context, "notify"),
-                    ),
-                    new Divider(),
+                  ),
+                ),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(Icons.account_circle,
+                    color: Color(0xff170e50)),
+                title: new Text(Translations.of(context).text('profile')),
+                onTap: () => _onListTileTap(context, "profile"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading:
+                new Icon(Icons.drive_eta, color: Color(0xff170e50)),
+                title:
+                new Text(Translations.of(context).text('my_rides')),
+                onTap: () => _onListTileTap(context, "my_rides"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading:
+                new Icon(Icons.my_location, color: Color(0xff170e50)),
+                title: new Text(
+                    Translations.of(context).text('my_locations')),
+                onTap: () => _onListTileTap(context, "mylocation"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(Icons.favorite_border,
+                    color: Color(0xff170e50)),
+                title:
+                new Text(Translations.of(context).text('my_orders')),
+                onTap: () => _onListTileTap(context, "my_order"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading:
+                new Icon(Icons.feedback, color: Color(0xff170e50)),
+                title:
+                new Text(Translations.of(context).text('feedback')),
+                onTap: () => _onListTileTap(context, "feedback"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(Icons.confirmation_number,
+                    color: Color(0xff170e50)),
+                title: new Text(
+                    Translations.of(context).text('promo_codes')),
+                onTap: () => _onListTileTap(context, "promo"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(Icons.subscriptions,
+                    color: Color(0xff170e50)),
+                title: new Text(
+                    Translations.of(context).text('subscription')),
+                onTap: () => _onListTileTap(context, "subscription"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading:
+                new Icon(Icons.local_offer, color: Color(0xff170e50)),
+                title: new Text(Translations.of(context).text('offers')),
+                onTap: () => _onListTileTap(context, "offers"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(Icons.notifications,
+                    color: Color(0xff170e50)),
+                title: new Text(
+                    Translations.of(context).text('notifications')),
+                onTap: () => _onListTileTap(context, "notify"),
+              ),
+              new Divider(),
 //                    new ListTile(
 //                      dense: true,
 //                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
@@ -407,111 +409,111 @@ class _LandingPage extends State<LandingPage> {
 //                          new Text(Translations.of(context).text('settings')),
 //                      onTap: () => _onListTileTap(context, ""),
 //                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(Icons.question_answer,
-                          color: Color(0xff170e50)),
-                      title: new Text(Translations.of(context).text('faq')),
-                      onTap: () => _onListTileTap(context, "faq"),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(Icons.question_answer,
+                    color: Color(0xff170e50)),
+                title: new Text(Translations.of(context).text('faq')),
+                onTap: () => _onListTileTap(context, "faq"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(Icons.call, color: Color(0xff170e50)),
+                title:
+                new Text(Translations.of(context).text('contacts')),
+                onTap: () => _onListTileTap(context, "contactus"),
+              ),
+              new ExpansionTile(
+                leading:
+                new Icon(Icons.g_translate, color: Color(0xff170e50)),
+                title: Text(
+                    Translations.of(context).text('change_language')),
+                children: <Widget>[
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.only(
+                        left: MediaQuery.of(context).size.width / 4,
+                        right: 0.0),
+                    title: Text(
+                      Translations.of(context).text('english'),
+                      textAlign: TextAlign.left,
                     ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(Icons.call, color: Color(0xff170e50)),
-                      title:
-                          new Text(Translations.of(context).text('contacts')),
-                      onTap: () => _onListTileTap(context, "contactus"),
+                    onTap: () => {
+                      Navigator.of(context).pop(),
+                      Provider.of<LocaleModel>(context)
+                          .changelocale(Locale("en"))
+                    },
+                  ),
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.only(
+                        left: MediaQuery.of(context).size.width / 4,
+                        right: 0.0),
+                    title: Text(
+                      Translations.of(context).text('arabic'),
+                      textAlign: TextAlign.left,
                     ),
-                    new ExpansionTile(
-                      leading:
-                          new Icon(Icons.g_translate, color: Color(0xff170e50)),
-                      title: Text(
-                          Translations.of(context).text('change_language')),
-                      children: <Widget>[
-                        ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.only(
-                              left: MediaQuery.of(context).size.width / 4,
-                              right: 0.0),
-                          title: Text(
-                            Translations.of(context).text('english'),
-                            textAlign: TextAlign.left,
-                          ),
-                          onTap: () => {
-                            Navigator.of(context).pop(),
-                            Provider.of<LocaleModel>(context)
-                                .changelocale(Locale("en"))
-                          },
-                        ),
-                        ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.only(
-                              left: MediaQuery.of(context).size.width / 4,
-                              right: 0.0),
-                          title: Text(
-                            Translations.of(context).text('arabic'),
-                            textAlign: TextAlign.left,
-                          ),
-                          onTap: () => {
-                            Navigator.of(context).pop(),
-                            Provider.of<LocaleModel>(context)
-                                .changelocale(Locale("ar"))
-                          },
-                        ),
-                        ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.only(
-                              left: MediaQuery.of(context).size.width / 4,
-                              right: 0.0),
-                          title: Text(
-                            Translations.of(context).text('kurdish'),
-                            textAlign: TextAlign.left,
-                          ),
-                          onTap: () => {
-                            Navigator.of(context).pop(),
-                            Provider.of<LocaleModel>(context)
-                                .changelocale(Locale("ku"))
-                          },
-                        ),
-                      ],
+                    onTap: () => {
+                      Navigator.of(context).pop(),
+                      Provider.of<LocaleModel>(context)
+                          .changelocale(Locale("ar"))
+                    },
+                  ),
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.only(
+                        left: MediaQuery.of(context).size.width / 4,
+                        right: 0.0),
+                    title: Text(
+                      Translations.of(context).text('kurdish'),
+                      textAlign: TextAlign.left,
                     ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(
-                        Icons.info,
-                        color: Color(0xff170e50),
-                      ),
-                      title: new Text(
-                          Translations.of(context).text('about') + ' Eleven'),
-                      onTap: () => _onListTileTap(context, "about"),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(Icons.new_releases,
-                          color: Color(0xff170e50)),
-                      title: new Text(
-                          Translations.of(context).text('app_version')),
-                      trailing: new Text(
-                        "v1.0.2",
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontFamily: 'Montserrat',
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    new ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      leading: new Icon(Icons.power_settings_new,
-                          color: Color(0xff170e50)),
-                      title: new Text(Translations.of(context).text('logout')),
-                      onTap: () => _onListTileTap(context, "logout"),
-                    ),
-                  ],
-                )
+                    onTap: () => {
+                      Navigator.of(context).pop(),
+                      Provider.of<LocaleModel>(context)
+                          .changelocale(Locale("ku"))
+                    },
+                  ),
+                ],
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(
+                  Icons.info,
+                  color: Color(0xff170e50),
+                ),
+                title: new Text(
+                    Translations.of(context).text('about') + ' Eleven'),
+                onTap: () => _onListTileTap(context, "about"),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(Icons.new_releases,
+                    color: Color(0xff170e50)),
+                title: new Text(
+                    Translations.of(context).text('app_version')),
+                trailing: new Text(
+                  "v1.0.2",
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontFamily: 'Montserrat',
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              new ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+                leading: new Icon(Icons.power_settings_new,
+                    color: Color(0xff170e50)),
+                title: new Text(Translations.of(context).text('logout')),
+                onTap: () => _onListTileTap(context, "logout"),
+              ),
+            ],
+          )
               : Container(),
         ),
         body: Stack(
@@ -528,21 +530,21 @@ class _LandingPage extends State<LandingPage> {
       showDialog(
           context: context,
           builder: (context) => AlertDialog(
-                title: Text(Translations.of(context).text('logout')),
-                content:
-                    Text(Translations.of(context).text('are_u_sure_logout')),
-                actions: <Widget>[
-                  FlatButton(
-                    child: Text(Translations.of(context).text('no')),
-                    onPressed: () => Navigator.pop(context, false),
-                  ),
-                  FlatButton(
-                      child: Text(Translations.of(context).text('yes')),
-                      onPressed: () => {
-                            clearPreference(context),
-                          }),
-                ],
-              ));
+            title: Text(Translations.of(context).text('logout')),
+            content:
+            Text(Translations.of(context).text('are_u_sure_logout')),
+            actions: <Widget>[
+              FlatButton(
+                child: Text(Translations.of(context).text('no')),
+                onPressed: () => Navigator.pop(context, false),
+              ),
+              FlatButton(
+                  child: Text(Translations.of(context).text('yes')),
+                  onPressed: () => {
+                    clearPreference(context),
+                  }),
+            ],
+          ));
     } else if (from == "feedback") {
       Navigator.push(
           context,
@@ -556,7 +558,7 @@ class _LandingPage extends State<LandingPage> {
           context,
           new MaterialPageRoute(
               builder: (context) =>
-                  new CheckOrderHistory("Check Order History")));
+              new CheckOrderHistory("Check Order History")));
     } else if (from == "offers") {
       Navigator.push(context,
           new MaterialPageRoute(builder: (context) => new OffersPage()));
@@ -613,7 +615,7 @@ class _LandingPage extends State<LandingPage> {
     Navigator.pushAndRemoveUntil(
       context,
       new MaterialPageRoute(builder: (context) => new LoginPage()),
-      (Route<dynamic> route) => false,
+          (Route<dynamic> route) => false,
     );
   }
 
@@ -634,331 +636,333 @@ class _LandingPage extends State<LandingPage> {
         children: <Widget>[
           !isConfirmed
               ? Container(
-                  width: MediaQuery.of(context).size.width,
-                  decoration: new BoxDecoration(
-                      color: const Color(0xFFFFFFFF),
-                      boxShadow: [
-                        new BoxShadow(
-                          color: Colors.grey,
-                          blurRadius: 5.0,
-                        ),
-                      ]),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: <Widget>[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            locations.length > 0
-                                ? Expanded(
-                                    child: CarouselSlider(
-                                      height: 40,
-                                      aspectRatio: 2.0,
-                                      onPageChanged: (index) {
-                                        setState(() {
-                                          _current = index;
-                                          address_id = locations[index].id;
-                                        });
-                                      },
-                                      items: locations.map((i) {
-                                        return Builder(
-                                          builder: (BuildContext context) {
-                                            return Row(
-                                              mainAxisSize: MainAxisSize.max,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceEvenly,
-                                              children: <Widget>[
-                                                locations.indexOf(i) != _current
-                                                    ? IconButton(
-                                                        icon: Icon(
-                                                          Icons
-                                                              .arrow_forward_ios,
-                                                          color: Colors.grey,
-                                                          size: 14,
-                                                        ),
-                                                        onPressed: () {},
-                                                      )
-                                                    : SizedBox(
-                                                        height: 10,
-                                                      ),
-                                                Expanded(
-                                                  child: Center(
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        if (markers.length >
-                                                            0) {
-                                                          markers.remove(markers
-                                                              .firstWhere((Marker
-                                                                      marker) =>
-                                                                  marker
-                                                                      .markerId ==
-                                                                  MarkerId(
-                                                                      "currentLocation")));
-                                                        }
-                                                        setState(() {
-                                                          address_id = i.id;
-                                                        });
-                                                        markers.add(Marker(
-                                                          markerId: MarkerId(
-                                                              "currentLocation"),
-                                                          icon: myIcon,
-                                                          position: new LatLng(
-                                                              double.parse(
-                                                                  i.lat),
-                                                              double.parse(
-                                                                  i.lon)),
-                                                          draggable: true,
-                                                          onDragEnd: ((value) {
-                                                            setState(() {
-                                                              isdragged = true;
-                                                            });
-                                                            getLocationAddress(
-                                                                value.latitude,
-                                                                value
-                                                                    .longitude);
-                                                            _UpdateCurrentLocation(
-                                                                CameraPosition(
-                                                              target: LatLng(
-                                                                  value
-                                                                      .latitude,
-                                                                  value
-                                                                      .longitude),
-                                                              zoom: 14.4746,
-                                                            ));
-                                                          }),
-                                                          onTap: () => _onTap(
-                                                              new LatLng(
-                                                                  double.parse(
-                                                                      i.lat),
-                                                                  double.parse(
-                                                                      i.lon))),
-                                                        ));
-                                                        setState(() {
-                                                          markers = markers;
-                                                        });
-                                                        _UpdateCurrentLocation(
-                                                            CameraPosition(
-                                                          target: LatLng(
-                                                              double.parse(
-                                                                  i.lat),
-                                                              double.parse(
-                                                                  i.lon)),
-                                                          zoom: 14.4746,
-                                                        ));
-                                                      },
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(8.0),
-                                                        child: Text(
-                                                          i.name,
-                                                          style: TextStyle(
-                                                              fontSize: 13,
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                locations.indexOf(i) != _current
-                                                    ? IconButton(
-                                                        icon: Icon(
-                                                          Icons.arrow_back_ios,
-                                                          color: Colors.grey,
-                                                          size: 14,
-                                                        ),
-                                                        onPressed: () {},
-                                                      )
-                                                    : SizedBox(
-                                                        height: 10,
-                                                      ),
-                                              ],
-                                            );
+            width: MediaQuery.of(context).size.width,
+            decoration: new BoxDecoration(
+                color: const Color(0xFFFFFFFF),
+                boxShadow: [
+                  new BoxShadow(
+                    color: Colors.grey,
+                    blurRadius: 5.0,
+                  ),
+                ]),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      locations.length > 0
+                          ? Expanded(
+                        child: CarouselSlider(
+                          height: 40,
+                          aspectRatio: 2.0,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _current = index;
+                              address_id = locations[index].id;
+                            });
+                          },
+                          items: locations.map((i) {
+                            return Builder(
+                              builder: (BuildContext context) {
+                                return Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceEvenly,
+                                  children: <Widget>[
+                                    locations.indexOf(i) != _current
+                                        ? IconButton(
+                                      icon: Icon(
+                                        Icons
+                                            .arrow_forward_ios,
+                                        color: Colors.grey,
+                                        size: 14,
+                                      ),
+                                      onPressed: () {},
+                                    )
+                                        : SizedBox(
+                                      height: 10,
+                                    ),
+                                    Expanded(
+                                      child: Center(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            if (markers.length >
+                                                0) {
+                                              markers.remove(markers
+                                                  .firstWhere((Marker
+                                              marker) =>
+                                              marker
+                                                  .markerId ==
+                                                  MarkerId(
+                                                      "currentLocation")));
+                                            }
+                                            setState(() {
+                                              address_id = i.id;
+                                            });
+                                            markers.add(Marker(
+                                              markerId: MarkerId(
+                                                  "currentLocation"),
+                                              icon: myIcon,
+                                              position: new LatLng(
+                                                  double.parse(
+                                                      i.lat),
+                                                  double.parse(
+                                                      i.lon)),
+                                              draggable: true,
+                                              onDragEnd: ((value) {
+                                                setState(() {
+                                                  isdragged = true;
+                                                  currentlat=value.latitude;
+                                                  currentlon=value.longitude;
+                                                });
+                                                getLocationAddress(
+                                                    value.latitude,
+                                                    value
+                                                        .longitude);
+                                                _UpdateCurrentLocation(
+                                                    CameraPosition(
+                                                      target: LatLng(
+                                                          value
+                                                              .latitude,
+                                                          value
+                                                              .longitude),
+                                                      zoom: 14.4746,
+                                                    ));
+                                              }),
+                                              onTap: () => _onTap(
+                                                  new LatLng(
+                                                      double.parse(
+                                                          i.lat),
+                                                      double.parse(
+                                                          i.lon))),
+                                            ));
+                                            setState(() {
+                                              markers = markers;
+                                            });
+                                            _UpdateCurrentLocation(
+                                                CameraPosition(
+                                                  target: LatLng(
+                                                      double.parse(
+                                                          i.lat),
+                                                      double.parse(
+                                                          i.lon)),
+                                                  zoom: 14.4746,
+                                                ));
                                           },
-                                        );
-                                      }).toList(),
-                                    ),
-                                  )
-                                : Expanded(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.arrow_back_ios,
-                                            color: Colors.grey,
-                                            size: 14,
+                                          child: Padding(
+                                            padding:
+                                            const EdgeInsets
+                                                .all(8.0),
+                                            child: Text(
+                                              i.name,
+                                              style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontFamily:
+                                                  'Montserrat',
+                                                  fontWeight:
+                                                  FontWeight
+                                                      .bold),
+                                            ),
                                           ),
-                                          onPressed: () {},
-                                        ),
-                                        Text(
-                                          "Loading ...",
-                                          style: TextStyle(
-                                              fontSize: 13,
-                                              fontFamily: 'Montserrat',
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.arrow_forward_ios,
-                                            color: Colors.grey,
-                                            size: 14,
-                                          ),
-                                          onPressed: () {},
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                            Wrap(
-                              children: <Widget>[
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.add_circle,
-                                    color: Color(0xff170e50),
-                                    size: 24,
-                                  ),
-                                  onPressed: () {
-                                    Navigator.push(
-                                            context,
-                                            new MaterialPageRoute(
-                                                builder: (context) =>
-                                                    new AddLocation()))
-                                        .then((onVal) {
-                                      getLocation();
-                                    });
-                                  },
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 8, right: 8, bottom: 8),
-                          child: Divider(),
-                        ),
-                        Container(
-                          width: double.maxFinite,
-                          height: 100,
-                          child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: services.length,
-                              itemBuilder: (BuildContext ctxt, int index) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 10, right: 10),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      Container(
-                                        height: 80,
-                                        child: CustomRadio<String, dynamic>(
-                                          services: services[index],
-                                          value: services[index].radioButton,
-                                          groupValue: widget.radioValue,
-                                          animsBuilder: (AnimationController
-                                                  controller) =>
-                                              [
-                                            CurvedAnimation(
-                                                parent: controller,
-                                                curve: Curves.easeInOut),
-                                            ColorTween(
-                                                    begin: Colors.white,
-                                                    end: Colors.deepPurple)
-                                                .animate(controller),
-                                            ColorTween(
-                                                    begin: Colors.deepPurple,
-                                                    end: Colors.white)
-                                                .animate(controller),
-                                          ],
-                                          builder: dynamicBuilder,
                                         ),
                                       ),
-                                      Text(
-                                        services[index].name,
-                                        style: TextStyle(fontSize: 13),
-                                      )
-                                    ],
-                                  ),
+                                    ),
+                                    locations.indexOf(i) != _current
+                                        ? IconButton(
+                                      icon: Icon(
+                                        Icons.arrow_back_ios,
+                                        color: Colors.grey,
+                                        size: 14,
+                                      ),
+                                      onPressed: () {},
+                                    )
+                                        : SizedBox(
+                                      height: 10,
+                                    ),
+                                  ],
                                 );
-                              }),
+                              },
+                            );
+                          }).toList(),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 20, right: 20, bottom: 10, top: 20),
-                          child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                  minWidth: double.infinity, minHeight: 35.0),
-                              child: RaisedButton(
-                                  child: new Text(Translations.of(context)
-                                      .text('order_now')),
-                                  onPressed: () {
-                                    if (selectedServiceCat != '') {
-                                      setState(() {
-                                        isConfirmed = true;
-                                      });
-                                    } else {
-                                      _displaySnackBar(
-                                          "Please select one service");
-                                    }
-                                  },
-                                  textColor: Colors.white,
-                                  color: Color(0xff170e50),
-                                  shape: new RoundedRectangleBorder(
-                                      borderRadius:
-                                          new BorderRadius.circular(30.0)))),
-                        )
-                      ],
-                    ),
-                  ),
-                )
-              : Container(
-                  width: MediaQuery.of(context).size.width,
-                  decoration: new BoxDecoration(
-                      color: const Color(0xFFFFFFFF),
-                      boxShadow: [
-                        new BoxShadow(
-                          color: Colors.grey,
-                          blurRadius: 5.0,
-                        ),
-                      ]),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: <Widget>[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      )
+                          : Expanded(
+                        child: Row(
+                          mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             IconButton(
                               icon: Icon(
-                                Icons.close,
+                                Icons.arrow_back_ios,
                                 color: Colors.grey,
-                                size: 24,
+                                size: 14,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  isConfirmed = false;
-                                });
-                              },
+                              onPressed: () {},
                             ),
                             Text(
-                              Translations.of(context).text('my_rides'),
+                              "Loading ...",
                               style: TextStyle(
                                   fontSize: 13,
                                   fontFamily: 'Montserrat',
                                   fontWeight: FontWeight.bold),
                             ),
-                            SizedBox(
-                              width: 24,
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.grey,
+                                size: 14,
+                              ),
+                              onPressed: () {},
                             ),
+                          ],
+                        ),
+                      ),
+                      Wrap(
+                        children: <Widget>[
+                          IconButton(
+                            icon: Icon(
+                              Icons.add_circle,
+                              color: Color(0xff170e50),
+                              size: 24,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  new MaterialPageRoute(
+                                      builder: (context) =>
+                                      new AddLocation()))
+                                  .then((onVal) {
+                                getLocation();
+                              });
+                            },
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        left: 8, right: 8, bottom: 8),
+                    child: Divider(),
+                  ),
+                  Container(
+                    width: double.maxFinite,
+                    height: 100,
+                    child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: services.length,
+                        itemBuilder: (BuildContext ctxt, int index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                                left: 10, right: 10),
+                            child: Column(
+                              crossAxisAlignment:
+                              CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Container(
+                                  height: 80,
+                                  child: CustomRadio<String, dynamic>(
+                                    services: services[index],
+                                    value: services[index].radioButton,
+                                    groupValue: widget.radioValue,
+                                    animsBuilder: (AnimationController
+                                    controller) =>
+                                    [
+                                      CurvedAnimation(
+                                          parent: controller,
+                                          curve: Curves.easeInOut),
+                                      ColorTween(
+                                          begin: Colors.white,
+                                          end: Colors.deepPurple)
+                                          .animate(controller),
+                                      ColorTween(
+                                          begin: Colors.deepPurple,
+                                          end: Colors.white)
+                                          .animate(controller),
+                                    ],
+                                    builder: dynamicBuilder,
+                                  ),
+                                ),
+                                Text(
+                                  services[index].name,
+                                  style: TextStyle(fontSize: 13),
+                                )
+                              ],
+                            ),
+                          );
+                        }),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        left: 20, right: 20, bottom: 10, top: 20),
+                    child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                            minWidth: double.infinity, minHeight: 35.0),
+                        child: RaisedButton(
+                            child: new Text(Translations.of(context)
+                                .text('order_now')),
+                            onPressed: () {
+                              if (selectedServiceCat != '') {
+                                setState(() {
+                                  isConfirmed = true;
+                                });
+                              } else {
+                                _displaySnackBar(
+                                    "Please select one service");
+                              }
+                            },
+                            textColor: Colors.white,
+                            color: Color(0xff170e50),
+                            shape: new RoundedRectangleBorder(
+                                borderRadius:
+                                new BorderRadius.circular(30.0)))),
+                  )
+                ],
+              ),
+            ),
+          )
+              : Container(
+            width: MediaQuery.of(context).size.width,
+            decoration: new BoxDecoration(
+                color: const Color(0xFFFFFFFF),
+                boxShadow: [
+                  new BoxShadow(
+                    color: Colors.grey,
+                    blurRadius: 5.0,
+                  ),
+                ]),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          color: Colors.grey,
+                          size: 24,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isConfirmed = false;
+                          });
+                        },
+                      ),
+                      Text(
+                        Translations.of(context).text('my_rides'),
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontFamily: 'Montserrat',
+                            fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(
+                        width: 24,
+                      ),
 //                          IconButton(
 //                            icon: Icon(
 //                              Icons.add_circle,
@@ -967,89 +971,89 @@ class _LandingPage extends State<LandingPage> {
 //                            ),
 //                            onPressed: () {},
 //                          ),
-                          ],
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8, right: 8),
-                          child: Divider(),
-                        ),
-                        Container(
-                          width: double.maxFinite,
-                          height: 200,
-                          child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: myRides.length + 1,
-                              itemBuilder: (BuildContext ctxt, int index) {
-                                if (index == myRides.length)
-                                  return Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 30, right: 30),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: <Widget>[
-                                          Container(
-                                            height: 120,
-                                            child: new ClipRRect(
-                                              borderRadius:
-                                                  new BorderRadius.circular(
-                                                      8.0),
-                                              child: Stack(
-                                                children: <Widget>[
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.push(
-                                                          context,
-                                                          new MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  new AddRide(
-                                                                      null))).then(
-                                                          (onVal) {
-                                                        getMyRides();
-                                                      });
-                                                    },
-                                                    child: Container(
-                                                      height: 120,
-                                                      width: 150,
-                                                      decoration: BoxDecoration(
-                                                          color:
-                                                              Colors.black12),
-                                                      child: Column(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: <Widget>[
-                                                            Icon(Icons.add),
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(8.0),
-                                                              child: Text(
-                                                                  Translations.of(
-                                                                          context)
-                                                                      .text(
-                                                                          'add_new')),
-                                                            )
-                                                          ]),
-                                                    ),
-                                                  ),
-                                                ],
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, right: 8),
+                    child: Divider(),
+                  ),
+                  Container(
+                    width: double.maxFinite,
+                    height: 200,
+                    child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: myRides.length + 1,
+                        itemBuilder: (BuildContext ctxt, int index) {
+                          if (index == myRides.length)
+                            return Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 30, right: 30),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.center,
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                                  children: <Widget>[
+                                    Container(
+                                      height: 120,
+                                      child: new ClipRRect(
+                                        borderRadius:
+                                        new BorderRadius.circular(
+                                            8.0),
+                                        child: Stack(
+                                          children: <Widget>[
+                                            GestureDetector(
+                                              onTap: () {
+                                                Navigator.push(
+                                                    context,
+                                                    new MaterialPageRoute(
+                                                        builder: (context) =>
+                                                        new AddRide(
+                                                            null))).then(
+                                                        (onVal) {
+                                                      getMyRides();
+                                                    });
+                                              },
+                                              child: Container(
+                                                height: 120,
+                                                width: 150,
+                                                decoration: BoxDecoration(
+                                                    color:
+                                                    Colors.black12),
+                                                child: Column(
+                                                    mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .center,
+                                                    children: <Widget>[
+                                                      Icon(Icons.add),
+                                                      Padding(
+                                                        padding:
+                                                        const EdgeInsets
+                                                            .all(8.0),
+                                                        child: Text(
+                                                            Translations.of(
+                                                                context)
+                                                                .text(
+                                                                'add_new')),
+                                                      )
+                                                    ]),
                                               ),
                                             ),
-                                          )
-                                        ],
-                                      ));
-                                else
-                                  return _buildItem(context, myRides[index]);
-                              }),
-                        ),
-                      ],
-                    ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ));
+                          else
+                            return _buildItem(context, myRides[index]);
+                        }),
                   ),
-                ),
+                ],
+              ),
+            ),
+          ),
         ]);
     list.add(mapView);
     if (showfooter) {
@@ -1079,7 +1083,7 @@ class _LandingPage extends State<LandingPage> {
             final geolocation = await place.geolocation;
             if (markers.length > 0) {
               markers.remove(markers.firstWhere((Marker marker) =>
-                  marker.markerId == MarkerId("currentLocation")));
+              marker.markerId == MarkerId("currentLocation")));
             }
             markers.add(Marker(
               markerId: MarkerId("currentLocation"),
@@ -1089,6 +1093,8 @@ class _LandingPage extends State<LandingPage> {
               onDragEnd: ((value) {
                 setState(() {
                   isdragged = true;
+                  currentlat=value.latitude;
+                  currentlon=value.longitude;
                 });
                 getLocationAddress(value.latitude, value.longitude);
                 _UpdateCurrentLocation(CameraPosition(
@@ -1131,7 +1137,7 @@ class _LandingPage extends State<LandingPage> {
   Future getLocationAddress(latitude, longitude) async {
     final coordinates = new Coordinates(latitude, longitude);
     var addresses =
-        await Geocoder.local.findAddressesFromCoordinates(coordinates);
+    await Geocoder.local.findAddressesFromCoordinates(coordinates);
     var first = addresses.first;
     setState(() {
       locationTitle = first.subLocality;
@@ -1164,7 +1170,7 @@ class _LandingPage extends State<LandingPage> {
         getLocationAddress(currentLocation.latitude, currentLocation.longitude);
         if (markers.length > 0) {
           markers.remove(markers.firstWhere(
-              (Marker marker) => marker.markerId == MarkerId("currentLocation"),
+                  (Marker marker) => marker.markerId == MarkerId("currentLocation"),
               orElse: () => null));
         }
         markers.add(Marker(
@@ -1175,6 +1181,8 @@ class _LandingPage extends State<LandingPage> {
           onDragEnd: ((value) {
             setState(() {
               isdragged = true;
+              currentlat=value.latitude;
+              currentlon=value.longitude;
             });
             getLocationAddress(value.latitude, value.longitude);
             _UpdateCurrentLocation(CameraPosition(
@@ -1187,6 +1195,8 @@ class _LandingPage extends State<LandingPage> {
         ));
         setState(() {
           currentLocations = currentLocation;
+          currentlat=currentLocation.latitude;
+          currentlon=currentLocation.longitude;
           _isLoading = false;
         });
       });
@@ -1260,7 +1270,7 @@ class _LandingPage extends State<LandingPage> {
       _isLoading = true;
     });
     var request =
-        new MultipartRequest("GET", Uri.parse(api_url + "user/address/list"));
+    new MultipartRequest("GET", Uri.parse(api_url + "user/address/list"));
     request.headers['Authorization'] = "Bearer $acccessToken";
     commonMethod(request).then((onResponse) {
       onResponse.stream.transform(utf8.decoder).listen((value) {
@@ -1303,7 +1313,7 @@ class _LandingPage extends State<LandingPage> {
       _isLoading = true;
     });
     var request =
-        new MultipartRequest("GET", Uri.parse(api_url + "user/getMyRides"));
+    new MultipartRequest("GET", Uri.parse(api_url + "user/getMyRides"));
     request.headers['Authorization'] = "Bearer $acccessToken";
     commonMethod(request).then((onResponse) {
       onResponse.stream.transform(utf8.decoder).listen((value) {
@@ -1367,8 +1377,8 @@ class _LandingPage extends State<LandingPage> {
                                   selectedServiceCat,
                                   myRid.type,
                                   address_id,
-                                  currentLocations.latitude,
-                                  currentLocations.longitude)));
+                                  currentlat,
+                                  currentlon)));
 //                      } else {
 //                        _displaySnackBar(
 //                            Translations.of(context).text('no_location'));
@@ -1427,7 +1437,7 @@ class _LandingPage extends State<LandingPage> {
       _isLoading = true;
     });
     var request =
-        new MultipartRequest("POST", Uri.parse(api_url + "user/deleteMyRides"));
+    new MultipartRequest("POST", Uri.parse(api_url + "user/deleteMyRides"));
     request.fields['ride_id'] = id;
     request.headers['Authorization'] = "Bearer $acccessToken";
     commonMethod(request).then((onResponse) {
