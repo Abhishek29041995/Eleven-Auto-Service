@@ -267,7 +267,7 @@ class _LandingPage extends State<LandingPage> {
 
   Future<void> _UpdateCurrentLocation(CameraPosition cameraPosition) async {
     final GoogleMapController controller = await _controller.future;
-    controller.moveCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
   }
 
   @override
@@ -1160,47 +1160,52 @@ class _LandingPage extends State<LandingPage> {
   }
 
   void getUpdatedLocation() {
-    location.getLocation().then((LocationData currentLocation) {
-      new Timer(new Duration(milliseconds: 2000), () {
-        _UpdateCurrentLocation(CameraPosition(
-          target: LatLng(currentLocation.latitude, currentLocation.longitude),
-          zoom: 14.4746,
-        ));
 
-        getLocationAddress(currentLocation.latitude, currentLocation.longitude);
-        if (markers.length > 0) {
-          markers.remove(markers.firstWhere(
-                  (Marker marker) => marker.markerId == MarkerId("currentLocation"),
-              orElse: () => null));
-        }
-        markers.add(Marker(
-          markerId: MarkerId("currentLocation"),
-          icon: myIcon,
-          position: LatLng(currentLocation.latitude, currentLocation.longitude),
-          draggable: true,
-          onDragEnd: ((value) {
-            setState(() {
-              isdragged = true;
-              currentlat=value.latitude;
-              currentlon=value.longitude;
-            });
-            getLocationAddress(value.latitude, value.longitude);
-            _UpdateCurrentLocation(CameraPosition(
-              target: LatLng(value.latitude, value.longitude),
-              zoom: 14.4746,
-            ));
-          }),
-          onTap: () => _onTap(
-              LatLng(currentLocation.latitude, currentLocation.longitude)),
-        ));
-        setState(() {
-          currentLocations = currentLocation;
-          currentlat=currentLocation.latitude;
-          currentlon=currentLocation.longitude;
-          _isLoading = false;
+    Future.delayed(const Duration(milliseconds: 100), () {
+      location.getLocation().then((LocationData currentLocation) {
+        new Timer(new Duration(milliseconds: 2000), () {
+          _UpdateCurrentLocation(CameraPosition(
+            target: LatLng(currentLocation.latitude, currentLocation.longitude),
+            zoom: 14.4746,
+          ));
+
+          getLocationAddress(currentLocation.latitude, currentLocation.longitude);
+          if (markers.length > 0) {
+            markers.remove(markers.firstWhere(
+                    (Marker marker) => marker.markerId == MarkerId("currentLocation"),
+                orElse: () => null));
+          }
+          markers.add(Marker(
+            markerId: MarkerId("currentLocation"),
+            icon: myIcon,
+            position: LatLng(currentLocation.latitude, currentLocation.longitude),
+            draggable: true,
+            onDragEnd: ((value) {
+              setState(() {
+                isdragged = true;
+                currentlat=value.latitude;
+                currentlon=value.longitude;
+              });
+              getLocationAddress(value.latitude, value.longitude);
+              _UpdateCurrentLocation(CameraPosition(
+                target: LatLng(value.latitude, value.longitude),
+                zoom: 14.4746,
+              ));
+            }),
+            onTap: () => _onTap(
+                LatLng(currentLocation.latitude, currentLocation.longitude)),
+          ));
+          setState(() {
+            currentLocations = currentLocation;
+            currentlat=currentLocation.latitude;
+            currentlon=currentLocation.longitude;
+            _isLoading = false;
+          });
         });
       });
     });
+
+
   }
 
   void setRadioItems() {
