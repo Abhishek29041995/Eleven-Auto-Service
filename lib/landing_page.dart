@@ -1183,8 +1183,8 @@ class _LandingPage extends State<LandingPage> {
             onDragEnd: ((value) {
               setState(() {
                 isdragged = true;
-                currentlat=value.latitude;
-                currentlon=value.longitude;
+                currentlat = value.latitude;
+                currentlon = value.longitude;
               });
               getLocationAddress(value.latitude, value.longitude);
               _UpdateCurrentLocation(CameraPosition(
