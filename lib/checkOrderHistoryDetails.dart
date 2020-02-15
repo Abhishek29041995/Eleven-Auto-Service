@@ -336,7 +336,7 @@ class _CheckOrderHistoryDetails extends State<CheckOrderHistoryDetails> {
                                   context,
                                   new MaterialPageRoute(
                                       builder: (context) =>
-                                          new ShowDirections(orderList.worker,orderList.address)));
+                                          new ShowDirections(orderList.worker,orderList.address, orderList.user_lat, orderList.user_lon)));
                               }else{
                                 presentToast(Translations.of(context).text('order_not_assigned'), context, 0);
                               }

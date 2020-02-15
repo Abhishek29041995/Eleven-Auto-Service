@@ -17,14 +17,18 @@ const double CAMERA_BEARING = 30;
 class ShowDirections extends StatefulWidget {
   Map worker;
   Map address;
+  double userLat;
+  double userLon;
 
-  ShowDirections(worker, address) {
+  ShowDirections(worker, address, userLat, userLon) {
     this.worker = worker;
     this.address = address;
+    this.userLat = double.parse(userLat);
+    this.userLon = double.parse(userLon);
   }
 
   _ShowDirectionsState createState() =>
-      _ShowDirectionsState(this.worker, this.address);
+      _ShowDirectionsState(this.worker, this.address, this.userLat, this.userLon);
 }
 
 class _ShowDirectionsState extends State<ShowDirections> {
@@ -56,12 +60,20 @@ class _ShowDirectionsState extends State<ShowDirections> {
   StreamSubscription subscription;
   Map worker;
   Map address;
+  double user_lat, user_lon;
 
-  _ShowDirectionsState(worker, address) {
+  _ShowDirectionsState(worker, address, user_lat, user_lon) {
     this.worker = worker;
     this.address = address;
-    DEST_LOCATION =
-        LatLng(double.parse(address['lat']), double.parse(address['lon']));
+    if(address != null){
+      DEST_LOCATION =
+          LatLng(double.parse(address['lat']), double.parse(address['lon']));
+    }else{
+      DEST_LOCATION =
+          LatLng(user_lat, user_lon);
+
+    }
+
   }
 
   @override
