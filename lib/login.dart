@@ -28,7 +28,7 @@ class _LoginSate extends State<LoginPage> {
   final LocalAuthentication auth = LocalAuthentication();
   String _authorized = 'Not Authorized';
   Country _selectedDialogCountry =
-      CountryPickerUtils.getCountryByPhoneCode('91');
+      CountryPickerUtils.getCountryByPhoneCode('964');
   bool _canCheckBiometrics = false;
   var _ScaffoldStateKey = new GlobalKey<ScaffoldState>();
   bool _isLoggedIn = false;

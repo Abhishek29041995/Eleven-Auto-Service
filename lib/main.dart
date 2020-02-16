@@ -98,7 +98,7 @@ class SplashState extends State<Splash> {
     } else {
       prefs.setBool('seen', true);
       Navigator.of(context).pushReplacement(
-          new MaterialPageRoute(builder: (context) => new IntroScreen()));
+          new MaterialPageRoute(builder: (context) => new LoginPage()));
     }
   }
 
